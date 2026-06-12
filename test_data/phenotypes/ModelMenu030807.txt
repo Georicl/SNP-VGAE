@@ -1,0 +1,130 @@
+PhenotypeFile	Phenotype	Covariates	Model	Function
+EPM.txt	EPM.OpenArmLatency	"GENDER,EndNormalBW,EPM.OpenArmLatencyCensored"	"Surv(1+EPM.OpenArmLatency,!EPM.OpenArmLatencyCensored) ~ GENDER + EndNormalBW"	survival
+OFT.txt	OFT.Latency	"GENDER,EndNormalBW,OFT.Latency.Censored"	"Surv(1+OFT.Latency,!OFT.Latency.Censored) ~ GENDER + EndNormalBW"	survival
+FN.txt	FN.Latency	"GENDER,EndNormalBW,FN.LatencyCensored"	"Surv(FN.Latency,!FN.LatencyCensored) ~ GENDER + EndNormalBW"	survival
+AdrenalWeight.txt	AdrenalMeanWeight	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	log10(AdrenalMeanWeight) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Biochemistry.txt	Biochem.Albumin	"GENDER,EndNormalBW"	Biochem.Albumin ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.ALP	"GENDER,EndNormalBW"	sqrt(Biochem.ALP) ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.ALT	"GENDER,EndNormalBW"	log10(Biochem.ALT+3) ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.AST	"GENDER,EndNormalBW"	Biochem.AST^(-1/2) ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Calcium	"GENDER,EndNormalBW"	Biochem.Calcium ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Chloride	"GENDER,EndNormalBW"	Biochem.Chloride ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Creatinine	"GENDER,EndNormalBW,Age"	normalise(Biochem.Creatinine) ~ GENDER + EndNormalBW + Age	linear
+Biochemistry.txt	Biochem.Glucose	"GENDER,EndNormalBW"	Biochem.Glucose ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.HDL	"GENDER,EndNormalBW"	Biochem.HDL ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.LDL	"GENDER,EndNormalBW"	log10(Biochem.LDL) ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Phosphorous	"GENDER,EndNormalBW"	log10(Biochem.Phosphorous+1) ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Potassium	"GENDER,EndNormalBW"	Biochem.Potassium ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Sodium	"GENDER,EndNormalBW"	Biochem.Sodium ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Tot.Cholesterol	"GENDER,EndNormalBW"	Biochem.Tot.Cholesterol ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Tot.Protein	"GENDER,EndNormalBW"	Biochem.Tot.Protein^2 ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Triglycerides	"GENDER,EndNormalBW"	log10(Biochem.Triglycerides) ~ GENDER + EndNormalBW	linear
+Biochemistry.txt	Biochem.Urea	"GENDER,EndNormalBW"	log10(Biochem.Urea+1) ~ GENDER + EndNormalBW	linear
+Burrowing.txt	BurrowedPelletWeight	"GENDER,EndNormalBW,Date.StudyDay"	normalise(BurrowedPelletWeight) ~ GENDER + EndNormalBW + Date.StudyDay	linear
+Context.txt	Context.Mean.Freeze	"GENDER,EndNormalBW,Experimenter,CoatColour,Date.Month,FPS.TrainingChamber,Date.StudyDay"	sqrt(Context.Mean.Freeze) ~ GENDER + EndNormalBW + Experimenter + CoatColour + Date.Month + FPS.TrainingChamber + Date.StudyDay	linear
+Cue.txt	Cue.Boli	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	sqrt(Cue.Boli) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Cue.txt	Cue.Mean.Freeze.Corrected.During	"GENDER,EndNormalBW,CoatColour,FPS.TrainingChamber"	Cue.Mean.Freeze.Corrected.During ~ GENDER + EndNormalBW + CoatColour + FPS.TrainingChamber	linear
+Cue.txt	Cue.Mean.Freeze.Post	"GENDER,EndNormalBW,Date.Month,Date.StudyDay,FPS.TrainingChamber"	Cue.Mean.Freeze.Post ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay + FPS.TrainingChamber	linear
+Cue.txt	Cue.Raw.Activity.Before.Tone1	"GENDER,EndNormalBW,Date.Season,Date.Month,CoatColour,Date.StudyDay"	Cue.Raw.Activity.Before.Tone1 ~ GENDER + EndNormalBW + Date.Season + Date.Month + CoatColour + Date.StudyDay	linear
+Cue.txt	Cue.Activity.Base12.Increase	"GENDER,EndNormalBW,Experimenter"	Cue.Activity.Base12.Increase ~ GENDER + EndNormalBW + Experimenter	linear
+EarPunch.txt	EarHoleMeanArea	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	sqrt(EarHoleMeanArea) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+EMO.txt	EMO	"GENDER,EndNormalBW,Date.StudyDay"	EMO ~ GENDER + EndNormalBW + Date.StudyDay	linear
+EPM.txt	EPM.ClosedArmDistance	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	EPM.ClosedArmDistance ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+EPM.txt	EPM.ClosedArmEntries	"GENDER,EndNormalBW,Experimenter,Date.StudyDay"	EPM.ClosedArmEntries ~ GENDER + EndNormalBW + Experimenter + Date.StudyDay	linear
+EPM.txt	EPM.ClosedArmTime	"GENDER,EndNormalBW,Date.StudyDay"	sqrt(EPM.ClosedArmTime) ~ GENDER + EndNormalBW + Date.StudyDay	linear
+EPM.txt	EPM.JunctionDistance	"GENDER,EndNormalBW,Experimenter,CoatColour,Date.StudyDay"	EPM.JunctionDistance ~ GENDER + EndNormalBW + Experimenter + CoatColour + Date.StudyDay	linear
+EPM.txt	EPM.JunctionEntries	"GENDER,EndNormalBW,Experimenter,Date.Month,CoatColour,Date.StudyDay"	EPM.JunctionEntries ~ GENDER + EndNormalBW + Experimenter + Date.Month + CoatColour + Date.StudyDay	linear
+EPM.txt	EPM.JunctionTime	"GENDER,EndNormalBW,Date.StudyDay"	EPM.JunctionTime ~ GENDER + EndNormalBW + Date.StudyDay	linear
+EPM.txt	EPM.OpenArmDistance	"GENDER,EndNormalBW,Date.Month,CoatColour,Date.StudyDay"	EPM.OpenArmDistance^(1/3) ~ GENDER + EndNormalBW + Date.Month + CoatColour + Date.StudyDay	linear
+EPM.txt	EPM.OpenArmEntries	"GENDER,EndNormalBW,Date.Month,CoatColour,Date.StudyDay"	sqrt(EPM.OpenArmEntries) ~ GENDER + EndNormalBW + Date.Month + CoatColour + Date.StudyDay	linear
+EPM.txt	EPM.OpenArmTime	"GENDER,EndNormalBW,Date.Month,CoatColour,Date.StudyDay"	sqrt(EPM.OpenArmTime) ~ GENDER + EndNormalBW + Date.Month + CoatColour + Date.StudyDay	linear
+FaecalSteroid.txt	FaecalSteroid	"GENDER,EndNormalBW,Date.StudyDay"	log10(FaecalSteroid) ~ GENDER + EndNormalBW + Date.StudyDay	linear
+FPS.txt	FPS.Bang.Increase	"GENDER,EndNormalBW,CoatColour,Test.Date.StudyDay"	normalise(FPS.Bang.Increase) ~ GENDER + EndNormalBW + CoatColour + Test.Date.StudyDay	linear
+FPS.txt	FPS.Bang.Tone.Increase	"GENDER,EndNormalBW,Test.Date.StudyDay"	normalise(FPS.Bang.Tone.Increase) ~ GENDER + EndNormalBW + Test.Date.StudyDay	linear
+FPS.txt	FPS.Pre.Bang.Mean	"GENDER,EndNormalBW,Test.Chamber,Test.Date.StudyDay"	FPS.Pre.Bang.Mean^(1/3) ~ GENDER + EndNormalBW + Test.Chamber + Test.Date.StudyDay	linear
+FPS.txt	FPS.Pre.Bang.Tone.Mean	"GENDER,EndNormalBW,Test.Date.StudyDay,Test.Chamber"	FPS.Pre.Bang.Tone.Mean^(1/3) ~ GENDER + EndNormalBW + Test.Date.StudyDay + Test.Chamber	linear
+Glucose.txt	Glucose.Area	"GENDER,EndNormalBW,Experimenter"	Glucose.Area ~ GENDER + EndNormalBW + Experimenter	linear
+Glucose.txt	Glucose.Area0	"GENDER,EndNormalBW"	Glucose.Area0 ~ GENDER + EndNormalBW	linear
+Glucose.txt	Glucose.Slope	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Glucose.Slope ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Glucose.txt	Glucose_0	"GENDER,EndNormalBW,InjectionTime.StudyDay,InjectionTime.StudyStartSeconds,Experimenter"	sqrt(Glucose_0) ~ GENDER + EndNormalBW + InjectionTime.StudyDay + InjectionTime.StudyStartSeconds + Experimenter	linear
+Glucose.txt	Glucose_15	"GENDER,EndNormalBW,InjectionTime.StudyDay,InjectionTime.StudyStartSeconds,Experimenter"	sqrt(Glucose_15) ~ GENDER + EndNormalBW + InjectionTime.StudyDay + InjectionTime.StudyStartSeconds + Experimenter	linear
+Glucose.txt	Glucose_30	"GENDER,EndNormalBW,Experimenter"	sqrt(Glucose_30) ~ GENDER + EndNormalBW + Experimenter	linear
+Glucose.txt	Glucose.DeadFromAnesthetic	"GENDER,EndNormalBW"	Glucose.DeadFromAnesthetic ~ GENDER + EndNormalBW	binomial
+Glucose.txt	Glucose_75	"GENDER,EndNormalBW,Experimenter"	sqrt(Glucose_75) ~ GENDER + EndNormalBW + Experimenter	linear
+Haematology.txt	Haem.BASabs	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	normalise(Haem.BASabs) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.HCT	"GENDER,EndNormalBW,Date.StudyDay"	Haem.HCT^3 ~ GENDER + EndNormalBW + Date.StudyDay	linear
+Haematology.txt	Haem.HGB	"GENDER,EndNormalBW,Date.StudyDay"	Haem.HGB^3 ~ GENDER + EndNormalBW + Date.StudyDay	linear
+Haematology.txt	Haem.LYMabs	"GENDER,EndNormalBW,Date.Month,Date.StudyStartSeconds,Date.StudyDay"	sqrt(Haem.LYMabs) ~ GENDER + EndNormalBW + Date.Month + Date.StudyStartSeconds + Date.StudyDay	linear
+Haematology.txt	Haem.MCH	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Haem.MCH ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.MCHC	"GENDER,EndNormalBW,Age,Date.Season,Date.Month,Date.StudyDay"	Haem.MCHC ~ GENDER + EndNormalBW + Age + Date.Season + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.MCV	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Haem.MCV ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.MONabs	"GENDER,EndNormalBW,Date.Season,Date.Year,Date.Month,Date.StudyDay"	normalise(Haem.MONabs) ~ GENDER + EndNormalBW + Date.Season + Date.Year + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.MPV	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	normalise(Haem.MPV) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.NEUabs	"GENDER,EndNormalBW,CoatColour,Date.Season,Date.Year,Date.Month,Date.StudyDay"	normalise(Haem.NEUabs) ~ GENDER + EndNormalBW + CoatColour + Date.Season + Date.Year + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.PCT	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	sqrt(Haem.PCT) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.PLT	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Haem.PLT ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.RBC	"GENDER,EndNormalBW,Date.StudyDay"	Haem.RBC^3 ~ GENDER + EndNormalBW + Date.StudyDay	linear
+Haematology.txt	Haem.RDW	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Haem.RDW^-2 ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Haematology.txt	Haem.WBC	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	log10(Haem.WBC+1) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Immunology.txt	Imm.CD4inCD3XGeoMean	"GENDER,EndNormalBW,Date.StudyStartSeconds,Date.Season,Date.Month"	Imm.CD4inCD3XGeoMean^2 ~ GENDER + EndNormalBW + Date.StudyStartSeconds + Date.Season + Date.Month	linear
+Immunology.txt	Imm.CD8inCD3YGeoMean	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.CD8inCD3YGeoMean ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+Immunology.txt	Imm.PctB220	"GENDER,EndNormalBW,Date.Month"	sqrt(Imm.PctB220) ~ GENDER + EndNormalBW + Date.Month	linear
+Immunology.txt	Imm.PctCD3	"GENDER,EndNormalBW,Date.Month"	Imm.PctCD3^2 ~ GENDER + EndNormalBW + Date.Month	linear
+Immunology.txt	Imm.PctCD4	"GENDER,EndNormalBW,Date.Month"	Imm.PctCD4 ~ GENDER + EndNormalBW + Date.Month	linear
+Immunology.txt	Imm.PctCD4inCD3	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.PctCD4inCD3^2 ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+Immunology.txt	Imm.PctCD8inCD3	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.PctCD8inCD3 ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+Immunology.txt	Imm.PctNKTAndOutliers	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.PctNKTAndOutliers^(-1/2) ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+Immunology.txt	Imm.CD4CD8Ratio	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.CD4CD8Ratio^(-1/3) ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+Immunology.txt	Imm.PctCD8	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.PctCD8 ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+InsulinAndDerivedMeasures.txt	AUC.IRI.AUC.G	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	AUC.IRI.AUC.G^(1/4) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	DIRI.DG	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	DIRI.DG^(1/4) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Glucose.AUC	"GENDER,EndNormalBW,Date.Month,Experimenter,Date.StudyDay"	Glucose.AUC ~ GENDER + EndNormalBW + Date.Month + Experimenter + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Glucose.Delta	"GENDER,EndNormalBW,Date.Month,Experimenter,Date.StudyDay"	Glucose.Delta ~ GENDER + EndNormalBW + Date.Month + Experimenter + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Glucose.Slope	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Glucose.Slope^(1/2) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.AUC	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Insulin.AUC^(1/2) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.Delta	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Insulin.Delta^(1/3) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.Slope	"GENDER,EndNormalBW,Date.StudyDay"	Insulin.Slope^(1/3) ~ GENDER + EndNormalBW + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.0	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	log10(Insulin.0) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.15	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	log10(Insulin.15) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.30	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Insulin.30^(1/4) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+InsulinAndDerivedMeasures.txt	Insulin.75	"GENDER,EndNormalBW,Experimenter,Date.Month,Date.StudyDay"	Insulin.75^(1/3) ~ GENDER + EndNormalBW + Experimenter + Date.Month + Date.StudyDay	linear
+Obesity.txt	Obesity.BodyLength	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Obesity.BodyLength ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Obesity.txt	Obesity.BMI	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Obesity.BMI ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+OFT.txt	OFT.Boli	"GENDER,EndNormalBW,Date.Hour,Date.Month,Date.StudyDay"	sqrt(OFT.Boli+1) ~ GENDER + EndNormalBW + Date.Hour + Date.Month + Date.StudyDay	linear
+OFT.txt	OFT.CenterTime	"GENDER,EndNormalBW"	normalise(OFT.CenterTime) ~ GENDER + EndNormalBW	linear
+OFT.txt	OFT.TotalActivity	"GENDER,EndNormalBW,Experimenter,Date.StudyDay"	OFT.TotalActivity ~ GENDER + EndNormalBW + Experimenter + Date.StudyDay	linear
+PAS.txt	PAS.Ambulatory1	"GENDER,EndNormalBW,Experimenter,Date.StudyDay"	sqrt(PAS.Ambulatory1) ~ GENDER + EndNormalBW + Experimenter + Date.StudyDay	linear
+PAS.txt	PAS.Ambulatory6	"GENDER,EndNormalBW,Date.Hour"	sqrt(PAS.Ambulatory6) ~ GENDER + EndNormalBW + Date.Hour	linear
+PAS.txt	PAS.TotalAmbulatory	"GENDER,EndNormalBW,Experimenter,Date.StudyDay"	sqrt(PAS.TotalAmbulatory) ~ GENDER + EndNormalBW + Experimenter + Date.StudyDay	linear
+PAS.txt	PAS.TotalFine	"GENDER,EndNormalBW,Date.StudyDay"	PAS.TotalFine^2 ~ GENDER + EndNormalBW + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.base.BreathFrequency	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Pleth.base.BreathFrequency ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.base.EnhancedPause	"GENDER,EndNormalBW,Date.StudyStartSeconds,Date.Season,Date.Month,Date.StudyDay"	log10(Pleth.base.EnhancedPause) ~ GENDER + EndNormalBW + Date.StudyStartSeconds + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.base.ExpiratoryTime	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	log10(Pleth.base.ExpiratoryTime) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.base.InspiratoryTime	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Pleth.base.InspiratoryTime^(-2) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.base.MinuteVolume	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Pleth.base.MinuteVolume^(1/3) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.base.TidalVolume	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Pleth.base.TidalVolume^(1/3) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.EnhancedDiff	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Pleth.EnhancedDiff^(1/3) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.meta.BreathFrequency	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	log10(Pleth.meta.BreathFrequency) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.meta.EnhancedPause	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	log10(Pleth.meta.EnhancedPause) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.meta.ExpiratoryTime	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	log10(Pleth.meta.ExpiratoryTime) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.meta.InspiratoryTime	"GENDER,EndNormalBW,Date.Month,Date.StudyDay"	Pleth.meta.InspiratoryTime^(-1) ~ GENDER + EndNormalBW + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.meta.MinuteVolume	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Pleth.meta.MinuteVolume^(1/3) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Plethysmograph.txt	Pleth.meta.TidalVolume	"GENDER,EndNormalBW,Date.Season,Date.Month,Date.StudyDay"	Pleth.meta.TidalVolume^(1/3) ~ GENDER + EndNormalBW + Date.Season + Date.Month + Date.StudyDay	linear
+Weight.txt	End.Weight	GENDER	End.Weight^(1/3) ~ GENDER	linear
+Weight.txt	FN.PctWtLoss	"GENDER,FN.preWeight"	FN.PctWtLoss ~ GENDER + FN.preWeight	linear
+Weight.txt	FN.postWeight	GENDER	FN.postWeight^(1/3) ~ GENDER	linear
+Weight.txt	FN.preWeight	GENDER	FN.preWeight^(1/3) ~ GENDER	linear
+Weight.txt	Glucose.Weight	GENDER	Glucose.Weight^(1/3) ~ GENDER	linear
+Weight.txt	Pleth.Weight	GENDER	Pleth.Weight^(1/3) ~ GENDER	linear
+Weight.txt	Start.Weight	GENDER	Start.Weight^(1/3) ~ GENDER	linear
+Weight.txt	Weight.GrowthSlope	GENDER	Weight.GrowthSlope ~ GENDER	linear
+Anxiety.txt	Context	GENDER	Context ~ GENDER	linear
+Anxiety.txt	Anx	GENDER	Anx ~ GENDER	linear
+Anxiety.txt	Freeze	GENDER	Freeze ~ GENDER	linear
+Anxiety.txt	Explore	GENDER	Explore ~ GENDER	linear
+KI67.txt	KI67	"Batch,Date.StudyDay"	KI67 ~ Batch  + Date.StudyDay	linear
+ImmSizePhenotypes.txt	Imm.Bcell.size	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.Bcell.size ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+ImmSizePhenotypes.txt	Imm.CD4.size	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.CD4.size ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+ImmSizePhenotypes.txt	Imm.CD8.size	"GENDER,EndNormalBW,Date.Season,Date.Month"	Imm.CD8.size ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+CD4AndCD8Count.txt	CD4Count	"GENDER,EndNormalBW,Date.Season,Date.Month"	CD4Count ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear
+CD4AndCD8Count.txt	CD8Count	"GENDER,EndNormalBW,Date.Season,Date.Month"	CD8Count ~ GENDER + EndNormalBW + Date.Season + Date.Month	linear

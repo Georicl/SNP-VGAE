@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# C/C++ build artifacts
+bin/
+*.o
+*.obj
+*.exe
+*.out
+*.a
+*.so
+*.dylib
+*.dll
+build/
+cmake-build-*/
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# Test data (large files)
+test_data/*.bed
+test_data/*.bim
+test_data/*.fam
+
+# Logs
+*.log

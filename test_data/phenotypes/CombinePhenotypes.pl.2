@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+use strict;
+my $phenlist = "phen.list";
+my $Phenotypes = {};
+my $idlist = $ARGV[0];
+my $IDs = {};
+my $Combined = {};
+
+open (PHENLIST, $phenlist) || die "Can't open list of phenotype files\n";
+while (<PHENLIST>) {
+  chomp;
+  my @data = split;
+  $Phenotypes->{$data[0]}++;
+}
+
+open (IDS, $idlist) || die "Can't open list of animal ids\n";
+while (<IDS>) {
+  chomp;
+  my @data = split;
+  $IDs->{$data[0]}++;
+}
+
+foreach my $phenotype (sort keys %{$Phenotypes}) {
+  open (FILE, $phenotype) || die "Can't open phenotype file $phenotype\n";
+  while (<FILE>) {
+    chomp;
+    next if (/Phenotype/);
+    my @data = split;
+    if (exists($IDs->{$data[0]})) {
+      $Combined->{$data[0]}{$phenotype}= $data[1];
+    }
+  }
+}
+
+print "SUBJECT.NAME";
+foreach my $phenotype (sort keys %{$Phenotypes}) {
+ my $name = $phenotype; 
+ $name =~ s/.resid//;
+  print "\t$name";
+}
+print "\n";
+foreach my $id (sort keys %{$IDs}) {
+  print "$id";
+  foreach my $phenotype (sort keys %{$Phenotypes}) { 
+    if (exists($Combined->{$id}{$phenotype})) {
+      print "\t$Combined->{$id}{$phenotype}";
+    }
+    else {
+      print "\tNA";
+    }
+  }
+  print "\n";
+}
