@@ -5,12 +5,15 @@
 #include <sstream>
 #include <vector>
 
-#include "GenotypeData.h"
-
-// 函数声明
-MAF CalculateMAF(const std::string& snp_name, const std::vector<int>& genotype);
-std::vector<MAF> CalculateAllMAF(const GenotypeData& data);
-std::vector<MAF> Geno2MAF(const std::string GenotypeFile);
+// 存放结果数据的MAF结构体, 包含snp的名字, a2(也就是标记的值),
+// na(无效值,需要剔除), 总值
+struct MAF {
+  std::string snp_name;
+  double maf;
+  int a2;
+  int na;
+  int total_count;
+};
 
 MAF CalculateMAF(const std::string& snp_name,
                  const std::vector<int>& genotype) {
@@ -37,28 +40,6 @@ MAF CalculateMAF(const std::string& snp_name,
   // maf = min(p, 1 - p)
   result.maf = std::min(p, 1 - p);
   return result;
-}
-
-// 从 GenotypeData 结构体直接计算所有 SNP 的 MAF
-std::vector<MAF> CalculateAllMAF(const GenotypeData& data) {
-  std::vector<MAF> maf_list;
-
-  // 遍历每个 SNP (列)
-  for (size_t snp_idx = 0; snp_idx < data.snp_names.size(); ++snp_idx) {
-    // 提取该 SNP 在所有样本中的基因型
-    std::vector<int> genotype;
-    genotype.reserve(data.sample_ids.size());
-
-    for (size_t sample_idx = 0; sample_idx < data.sample_ids.size();
-         ++sample_idx) {
-      genotype.push_back(data.genotypes[sample_idx][snp_idx]);
-    }
-
-    // 计算该 SNP 的 MAF
-    maf_list.push_back(CalculateMAF(data.snp_names[snp_idx], genotype));
-  }
-
-  return maf_list;
 }
 
 std::vector<MAF> Geno2MAF(const std::string GenotypeFile) {
@@ -118,4 +99,13 @@ std::vector<MAF> Geno2MAF(const std::string GenotypeFile) {
     maf_vector.push_back(CalculateMAF(snp_name[i], snps[i]));
   }
   return maf_vector;
+}
+
+std::vector<MAF> FilterMAF(const std::vector<MAF>& maf_list,
+                           double thresold = 0.01) {
+  // 筛选MAF大于指定阈值的SNPs用于后续的分析, 阈值默认为0.01
+  std::vector<MAF> maf_filter;
+  std::copy_if(maf_list.begin(), maf_list.end(), std::back_inserter(maf_filter),
+               [thresold](const MAF& maf) { return maf.maf >= thresold; });
+  return maf_filter;
 }

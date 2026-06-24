@@ -4,7 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "GenotypeData.h"
+struct SNP {
+  std::string name;
+  std::string a1;
+  std::string a2;
+};
 
 // 读取 .alleles文件获取SNP信息, 返回一个包含了等位基因信息的vector
 std::vector<SNP> readAlleles(const std::string& path) {
@@ -35,6 +39,60 @@ std::vector<SNP> readAlleles(const std::string& path) {
   snps.push_back(current);
   return snps;
 }
+
+// ========== 输出到文件流  ==========
+/*
+// 处理data文件转换为基因型
+void ProccessGenoType(const std::string& datapath, const std::vector<SNP>& snps,
+                      std::ostream& out) {
+  std::ifstream file(datapath);
+  std::string line;
+
+  // 输出表头
+  out << "SampleID";
+  for (const auto& s : snps) out << "\t" << s.name;
+  out << "\n";
+
+  while (std::getline(file, line)) {
+    if (line.empty()) continue;
+    std::stringstream ss(line);
+    std::string id1, id2, others;
+
+    ss >> id1 >> id2;
+    // 跳过接下来4个字段
+    for (int i = 0; i < 4; ++i) ss >> others;
+    // 样本名
+    out << id1 << "_" << id2;
+
+    for (const auto& s : snps) {
+      // 读取snps 的点位, 根据ped文件每两列(也就是两个碱基)为一个等位基因所以
+      // 读取两列, 并循环读取, 每一次循环结束即为一行
+      std::string g1, g2;
+      if (!(ss >> g1 >> g2)) break;
+      if (g1 == "NA" || g2 == "NA") {
+        out << "\tNA";
+      } else {
+        int count = 0;
+        // 计算a2等位基因的数量：0=纯合a1, 1=杂合, 2=纯合a2
+        if (g1 == s.a2) count++;
+        if (g2 == s.a2) count++;
+        out << "\t" << count;
+      }
+    }
+    out << "\n";
+  }
+}
+*/
+
+// ========== 返回基因型矩阵结构体 ==========
+
+// 基因型数据结构
+struct GenotypeData {
+  std::vector<std::string> sample_ids;  // 样本ID列表
+  std::vector<std::string> snp_names;   // SNP名称列表
+  std::vector<std::vector<int>>
+      genotypes;  // 基因型矩阵 [sample][snp], -1表示NA
+};
 
 GenotypeData ProcessGenotype(const std::string& datapath,
                              const std::vector<SNP>& snps) {
