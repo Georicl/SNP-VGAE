@@ -20,7 +20,9 @@ struct SNPinfo {
 struct PlinkData {
   size_t num_snps;                       // SNP数量
   std::vector<SNPinfo> snp_info;         // SNP信息列表
-  std::vector<std::string> samples_ids;  // 样本ID列表
+  std::vector<std::string> fid;          // 家系ID列表
+  std::vector<std::string> iid;          // 个体ID列表
+  std::vector<std::string> samples_ids;  // 样本ID列表 (FID_IID, 兼容旧代码)
   size_t num_samples;                    // 样本数量
   Eigen::MatrixXi genotypes;  // 基因型矩阵 (SNP x Sample), NA=-9
 };

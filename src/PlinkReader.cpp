@@ -14,6 +14,8 @@ PlinkData PlinkReader(const std::string& bedFile, const std::string& bimFile,
   }
 
   std::string line;
+  std::vector<std::string> fid_list;
+  std::vector<std::string> iid_list;
   std::vector<std::string> sample_ids;
   int num_samples = 0;
   while (std::getline(fam, line)) {
@@ -23,6 +25,8 @@ PlinkData PlinkReader(const std::string& bedFile, const std::string& bimFile,
     std::istringstream ss(line);
     ss >> fid >> iid;
     sample_id = fid + "_" + iid;
+    fid_list.push_back(fid);
+    iid_list.push_back(iid);
     sample_ids.push_back(sample_id);
 
     ++num_samples;
@@ -127,6 +131,8 @@ PlinkData PlinkReader(const std::string& bedFile, const std::string& bimFile,
   PlinkData result;
   result.num_snps = num_snps;
   result.snp_info = snp_list;
+  result.fid = fid_list;
+  result.iid = iid_list;
   result.samples_ids = sample_ids;
   result.num_samples = num_samples;
   result.genotypes = genotype;
