@@ -20,36 +20,36 @@ import torch.nn as nn
 
 
 class SNPVAE(nn.Module):
-    def __init__(self, num_samples: int, d_snp: int = 64):
+    def __init__(self, num_samples: int, d_snp: int = 64, hidden_dim: int = 256):
         """
         num_samples: 样本数 (SNP向量的长度)
         d_snp: snp 嵌入维度(D_snp 隐空间维度), 默认为64
+        hidden_dim: 编码器/解码器隐藏层宽度, 默认256
         """
         super().__init__()
 
+        # 中间层维度：hidden_dim 和 hidden_dim//2
+        mid_dim = hidden_dim // 2
+
         # --编码器--
         self.encoder = nn.Sequential(
-            # 使用线性模型作为全链接层, 输入维度: N(样本数), 输出维度: 256.
-            nn.Linear(num_samples, 256),
-            # 使用 ELU 做激活函数: f(x) = x if x>0 else α*(exp(x)-1)
-            # 相对于ReLU更平滑, 在负区间有梯度
+            nn.Linear(num_samples, hidden_dim),
             nn.ELU(),
-            # 第二层连接层: 将维度256降维为128,
-            nn.Linear(256, 128),
+            nn.Linear(hidden_dim, mid_dim),
             nn.ELU(),
         )
 
         # 输出均值与方差, 以进行VAE
-        self.fc_mu = nn.Linear(128, d_snp)
-        self.fc_logvar = nn.Linear(128, d_snp)
+        self.fc_mu = nn.Linear(mid_dim, d_snp)
+        self.fc_logvar = nn.Linear(mid_dim, d_snp)
 
         # --解码器--
         self.decoder = nn.Sequential(
-            nn.Linear(d_snp, 128),
+            nn.Linear(d_snp, mid_dim),
             nn.ELU(),
-            nn.Linear(128, 256),
+            nn.Linear(mid_dim, hidden_dim),
             nn.ELU(),
-            nn.Linear(256, num_samples)
+            nn.Linear(hidden_dim, num_samples)
         )
 
     def encode(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:

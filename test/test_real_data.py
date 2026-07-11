@@ -24,7 +24,7 @@ import numpy as np
 import torch
 
 from data.genotype import genotype_read
-from pretrain.preprocess import preprocess_genotype
+from pretrain.preprocess import preprocess_genotype, inverse_standardize
 from pretrain.vae import SNPVAE, vae_loss
 from pretrain.extract_embeddings import extract_embeddings
 from pretrain.train import train_snp_vae
@@ -65,12 +65,16 @@ def parse_args():
                         help="训练轮数（默认 50，完整训练建议 200+）")
     parser.add_argument("--batch-size", type=int, default=512,
                         help="batch 大小")
-    parser.add_argument("--lr", type=float, default=1e-3,
+    parser.add_argument("--lr", type=float, default=5e-4,
                         help="学习率")
-    parser.add_argument("--beta", type=float, default=0.01,
+    parser.add_argument("--beta", type=float, default=0.001,
                         help="KL 散度权重")
-    parser.add_argument("--patience", type=int, default=20,
+    parser.add_argument("--patience", type=int, default=50,
                         help="早停耐心值")
+    parser.add_argument("--kl-warmup", type=int, default=150,
+                        help="KL 退火预热轮数")
+    parser.add_argument("--hidden-dim", type=int, default=1024,
+                        help="隐藏层宽度")
 
     # 设备
     parser.add_argument("--device", type=str, default=None,
@@ -104,16 +108,12 @@ def evaluate_model(
     评价 SNP-VAE 训练结果。
 
     评价维度:
-      1. 重建质量: 全局 MSE、逐 SNP 相关性、低质量 SNP 统计
-      2. 嵌入空间: 均值/标准差、KL 散度、维度利用率
-
-    可扩展性:
-      - 后续可加入 PCA/t-SNE 可视化
-      - 可加入下游预测任务的对比评价
-      - 可加入 MAF 分层分析（按频率分组评价重建质量）
+      1. 标准化空间重建质量: MSE（标准化后）
+      2. 原始尺度重建质量: 逆变换后 MSE、逐 SNP 相关性
+      3. 嵌入空间: 均值/标准差、KL 散度、维度利用率
     """
     # --- 数据预处理 ---
-    X = preprocess_genotype(genotype)  # (M, N)
+    X, snp_mean, snp_std = preprocess_genotype(genotype)  # (M, N)
     M, N = X.shape
 
     model.eval()
@@ -138,20 +138,31 @@ def evaluate_model(
         logvar_all = torch.cat(all_logvar, dim=0)  # (M, D_snp)
 
     # ========================================================================
-    # 1. 重建质量
+    # 1. 标准化空间重建质量
     # ========================================================================
-    print("\n  [评价] 重建质量")
+    print("\n  [评价] 标准化空间重建质量")
 
-    # 全局 MSE
-    global_mse = torch.nn.functional.mse_loss(X_recon, X).item()
-    print(f"    全局 MSE: {global_mse:.6f}")
+    global_mse_std = torch.nn.functional.mse_loss(X_recon, X).item()
+    print(f"    标准化空间 MSE: {global_mse_std:.6f}")
 
-    # 逐 SNP 相关性
+    # ========================================================================
+    # 2. 原始尺度重建质量（逆变换后对比）
+    # ========================================================================
+    print("\n  [评价] 原始尺度重建质量")
+
+    # 将标准化空间的重建值逆变换回原始尺度
+    X_recon_orig = inverse_standardize(X_recon, snp_mean, snp_std)  # (M, N)
+    X_orig = inverse_standardize(X, snp_mean, snp_std)              # (M, N)
+
+    # 原始尺度 MSE
+    global_mse_orig = np.mean((X_recon_orig - X_orig) ** 2)
+    print(f"    原始尺度 MSE: {global_mse_orig:.6f}")
+
+    # 逐 SNP 相关性（原始尺度）
     snp_correlations = []
     for i in range(M):
-        orig = X[i].numpy()
-        recon = X_recon[i].numpy()
-        # 跳过方差为 0 的 SNP（常数 SNP 无法计算相关性）
+        orig = X_orig[i]
+        recon = X_recon_orig[i]
         if orig.std() < 1e-8 or recon.std() < 1e-8:
             continue
         corr = np.corrcoef(orig, recon)[0, 1]
@@ -167,11 +178,11 @@ def evaluate_model(
     print(f"    低重建质量SNP数(<0.8): {n_low_quality}/{len(snp_correlations)}")
 
     # 重建值分布
-    print(f"    重建值范围: [{X_recon.min():.4f}, {X_recon.max():.4f}]")
-    print(f"    重建值均值: {X_recon.mean():.4f}, 标准差: {X_recon.std():.4f}")
+    print(f"    重建值范围: [{X_recon_orig.min():.4f}, {X_recon_orig.max():.4f}]")
+    print(f"    重建值均值: {X_recon_orig.mean():.4f}, 标准差: {X_recon_orig.std():.4f}")
 
     # ========================================================================
-    # 2. 嵌入空间质量
+    # 3. 嵌入空间质量
     # ========================================================================
     print("\n  [评价] 嵌入空间")
 
@@ -202,7 +213,8 @@ def evaluate_model(
     print(f"    嵌入含NaN: {has_nan}")
 
     return {
-        "global_mse": global_mse,
+        "global_mse_standardized": global_mse_std,
+        "global_mse_original": global_mse_orig,
         "snp_correlation_mean": snp_correlations.mean(),
         "snp_correlation_min": snp_correlations.min(),
         "n_low_quality_snps": int(n_low_quality),
@@ -253,6 +265,8 @@ def main():
         patience=args.patience,
         device=device,
         progress=True,
+        kl_warmup_epochs=args.kl_warmup,
+        hidden_dim=args.hidden_dim,
     )
     train_time = time.time() - start_time
     print(f"  嵌入矩阵形状: {snp_embeddings.shape}")
