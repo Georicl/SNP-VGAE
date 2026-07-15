@@ -38,8 +38,8 @@ def grm_reader(grm_bin_file: str, row_lens: int) -> np.ndarray:
     # 将下三角数据填入矩阵
     idx = np.tril_indices(row_lens)
     G[idx] = data
-    # 对称化：将严格上三角（k=1，跳过对角线）从下三角镜像，对角线保持不变
-    G += np.triu(G, k=1)
+    # 对称化：将严格下三角（k=-1）转置后加到上三角，对角线保持不变
+    G += np.tril(G, k=-1).T
     return G
 
 
