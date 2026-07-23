@@ -62,29 +62,29 @@ class TestPreprocessGenotype:
 
     def test_output_shape(self, small_genotype):
         """输出形状应与输入相同"""
-        result = preprocess_genotype(small_genotype)
+        result, _, _ = preprocess_genotype(small_genotype)
         assert result.shape == small_genotype.shape
 
     def test_output_dtype(self, small_genotype):
         """输出应为 float32"""
-        result = preprocess_genotype(small_genotype)
+        result, _, _ = preprocess_genotype(small_genotype)
         assert result.dtype == torch.float32
 
     def test_no_nan_in_output(self, small_genotype):
         """输出不应包含 NaN（缺失值已被填充）"""
-        result = preprocess_genotype(small_genotype)
+        result, _, _ = preprocess_genotype(small_genotype)
         assert not torch.isnan(result).any()
 
     def test_all_nan_row_filled_with_zero(self):
         """全缺失行应填充为 0"""
         data = np.full((5, 10), -9, dtype=np.int32)
-        result = preprocess_genotype(data)
+        result, _, _ = preprocess_genotype(data)
         expected = torch.zeros(5, 10, dtype=torch.float32)
         assert torch.allclose(result, expected)
 
     def test_no_negative9_in_output(self, small_genotype):
         """输出不应包含 -9（缺失编码）"""
-        result = preprocess_genotype(small_genotype)
+        result, _, _ = preprocess_genotype(small_genotype)
         assert not (result == -9.0).any()
 
 

@@ -38,5 +38,8 @@ def genotype_read(genotype_file: str, num_samples: int, num_snps: int) -> np.nda
 
         return geno_matrix
     else:
-        zero_matrix = np.zeros((1, 1), dtype=np.int16)
-        return zero_matrix
+        raise ValueError(
+            f"无效的 PLINK .bed 文件: 魔数不匹配 "
+            f"(期望 0x6C 0x1B 0x01, 实际 "
+            f"{magic[0]:#04x} {magic[1]:#04x} {magic[2]:#04x})"
+        )

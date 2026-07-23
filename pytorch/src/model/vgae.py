@@ -215,7 +215,7 @@ def vgae_loss(
     pheno_loss = nn.functional.mse_loss(y_pred, y_true)
 
     # --- 2. 边重建损失 (BCE + 负采样) ---
-    edge_loss = _edge_reconstruction_loss(
+    edge_loss = edge_reconstruction_loss(
         z, edge_index, adj_raw, neg_sample_ratio
     )
 
@@ -228,7 +228,7 @@ def vgae_loss(
     return total_loss, pheno_loss, edge_loss, kl_loss
 
 
-def _edge_reconstruction_loss(
+def edge_reconstruction_loss(
     z: Tensor,
     edge_index: Tensor,
     adj_raw: Tensor,

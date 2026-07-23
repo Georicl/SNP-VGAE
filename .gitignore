@@ -41,6 +41,11 @@ test_data/*.bed
 test_data/*.bim
 test_data/*.fam
 
+# Model artifacts (large binary)
+*.npy
+*.pt
+*.pth
+
 # Logs
 *.log
 

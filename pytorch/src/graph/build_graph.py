@@ -1,4 +1,5 @@
 from data.grm import grm_reader
+from data.genotype_utils import impute_genotype
 import numpy as np
 import torch
 
@@ -139,29 +140,9 @@ class GraphBuilder:
         返回:
             node_features: 返回节点特征张量 (N, D_snp)
         """
-        G = genotype.T.astype(np.float32)  # (N, M)
+        # --- 缺失值插补: -9 → SNP 列均值（共享逻辑） ---
+        G = impute_genotype(genotype)  # (N, M)
         E = snp_embeddings.astype(np.float32)  # (M, D_snp)
-        N, M = G.shape
-
-        # --- 缺失值插补: -9 → SNP 列均值 ---
-        missing_mask = G < -0.5
-
-        if missing_mask.any():
-            G_clean = G.copy()
-            G_clean[missing_mask] = 0.0
-
-            # 每列有效元素
-            valid_count = N - missing_mask.sum(axis=0)  # (M,)
-            col_sum = G_clean.sum(axis=0)  # (M,)
-
-            # 计算列均值, 处理全缺失 SNP
-            col_mean = np.zeros(M, dtype=np.float32)
-            nonzero_mask = valid_count > 0
-            col_mean[nonzero_mask] = col_sum[nonzero_mask] / \
-                valid_count[nonzero_mask]
-
-            # 填补缺失
-            G[missing_mask] = np.take(col_mean, np.where(missing_mask)[1])
 
         X = G @ E
 

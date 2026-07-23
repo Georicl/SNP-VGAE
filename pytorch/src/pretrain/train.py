@@ -56,6 +56,7 @@ def train_snp_vae(
     # 4.训练
     best_loss = float("inf")
     patience_count = 0  # 初始化计数器
+    best_state: dict | None = None
 
     # 学习率调度器：当损失不再下降时自动降低学习率
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -135,7 +136,9 @@ def train_snp_vae(
                 print(f"[SNP-VAE] 早停于 epoch {epoch+1}，最佳损失={best_loss:.4f}")
                 break
 
-    model.load_state_dict(best_state)
+    # 恢复最佳权重（若训练循环未执行则保留初始权重）
+    if best_state is not None:
+        model.load_state_dict(best_state)
 
     # 提取SNP嵌入
     snp_embeddings = extract_embeddings(model, X, device=device)

@@ -36,12 +36,15 @@ def covar_reader(covar_file: str) -> Dict:
     with open(covar_file, "r") as f:
         for line in f:
             parts = line.strip().split()
-            # 以 IID（parts[1]）作为字典的键，避免硬编码导致数据覆盖
+            if len(parts) < 2:
+                continue
+            # 以 IID（parts[1]）作为字典的键
+            # 动态解析所有协变量列（parts[2:]），避免硬编码列数
             covar_dict[parts[1]] = {
                 "fid": parts[0],
                 "iid": parts[1],
-                "covar1": parts[2],
-                "covar2": parts[3],
+                **{f"covar_{i+1}": parts[2 + i]
+                   for i in range(len(parts) - 2)},
             }
 
     return covar_dict
