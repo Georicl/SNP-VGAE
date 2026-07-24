@@ -24,33 +24,43 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 # ============================================================================
-# 全局样式
+# 全局样式 (Nature 风格)
 # ============================================================================
 plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 10,
-    "axes.titlesize": 11,
+    "font.size": 9,
+    "axes.titlesize": 12,
+    "axes.titleweight": "bold",
     "axes.labelsize": 10,
+    "axes.labelweight": "normal",
     "xtick.labelsize": 9,
     "ytick.labelsize": 9,
-    "legend.fontsize": 9,
+    "legend.fontsize": 8.5,
+    "legend.framealpha": 0.95,
+    "legend.edgecolor": "#CCCCCC",
     "figure.dpi": 300,
     "savefig.dpi": 300,
     "savefig.bbox": "tight",
+    "savefig.pad_inches": 0.05,
     "axes.spines.top": False,
     "axes.spines.right": False,
+    "axes.linewidth": 0.8,
     "axes.grid": True,
-    "grid.alpha": 0.3,
-    "grid.linewidth": 0.5,
+    "grid.alpha": 0.2,
+    "grid.linewidth": 0.4,
+    "grid.color": "#CCCCCC",
+    "xtick.major.width": 0.8,
+    "ytick.major.width": 0.8,
 })
 
-# 配色 (色盲友好)
-C_BLUP = "#4C72B0"    # 蓝
-C_VGAE = "#DD8452"    # 橙
-C_MEAN = "#8172B3"    # 紫
-C_REAL = "#C44E52"    # 红
-C_NULL = "#937860"    # 棕
+# Nature 配色方案
+C_BLUP = "#3C5488"    # 深藏青
+C_VGAE = "#E64B35"    # 朱红
+C_ACCENT = "#00A087"  # 青绿
+C_REAL = "#E64B35"    # 朱红 (同 VGAE)
+C_NULL = "#B09C85"    # 暖灰
+C_GRAY = "#666666"    # 注释灰
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULT_DIR = os.path.join(PROJECT_ROOT, "test", "result")
@@ -142,25 +152,30 @@ def fig2_multitrait():
         ax.errorbar(x[i] + w/2, vgae_r2[i], yerr=vgae_std,
                     fmt="none", color="#333", capsize=3, linewidth=1, zorder=4)
 
-    # 标注提升百分比
+    # 标注提升百分比 (BLUP R²<=0 时显示绝对增益)
     for i, t in enumerate(data["traits"]):
         gain = t["gain_pct"]
-        label = f"+{gain:.0f}%" if gain > 0 else f"{gain:.0f}%"
+        blup_r2_val = t["blup_r2"]
+        if blup_r2_val <= 0:
+            label = f"+{t['gain']:.3f}"
+        else:
+            label = f"+{gain:.0f}%" if gain > 0 else f"{gain:.0f}%"
         y_max = max(blup_r2[i], vgae_r2[i])
-        ax.text(x[i] + w/2, y_max + 0.025, label, ha="center",
-                fontsize=8, fontweight="bold", color=C_VGAE)
+        ax.text(x[i] + w/2, y_max + 0.02, label, ha="center",
+                fontsize=7.5, fontweight="bold", color=C_VGAE)
 
     # h² 标注
     for i, h2 in enumerate(h2_vals):
-        ax.text(x[i], -0.045, f"h²={h2:.2f}", ha="center", fontsize=7.5, color="#666")
+        ax.text(x[i], -0.05, f"h²={h2:.2f}", ha="center", fontsize=7.5,
+                color=C_GRAY, style="italic")
 
-    ax.axhline(y=0, color="#999", linewidth=0.8, linestyle="-", zorder=1)
+    ax.axhline(y=0, color="#AAAAAA", linewidth=0.8, linestyle="-", zorder=1)
     ax.set_ylabel("Prediction R²")
     ax.set_xticks(x)
     ax.set_xticklabels(traits)
     ax.set_ylim(-0.08, 0.30)
-    ax.legend(loc="upper right", framealpha=0.9)
-    ax.set_title("Multi-trait Genomic Prediction: VGAE vs GBLUP")
+    ax.legend(loc="upper right", framealpha=0.95)
+    ax.set_title("Multi-trait Genomic Prediction Performance")
 
     save_fig(fig, "fig2_multitrait_comparison")
 
