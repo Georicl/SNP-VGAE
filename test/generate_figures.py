@@ -115,8 +115,8 @@ def fig1_architecture():
 
     ax.text(5.0, 3.2, "VGAE Genomic Prediction Pipeline",
             ha="center", fontsize=12, fontweight="bold")
-    ax.text(6.3, 0.15, "L = L_pheno + α·L_edge + β·L_KL",
-            ha="center", fontsize=8, style="italic", color="#555")
+    ax.text(6.3, 0.15, r"$\mathcal{L} = \mathcal{L}_{\mathrm{pheno}} + \alpha \cdot \mathcal{L}_{\mathrm{edge}} + \beta \cdot \mathcal{L}_{\mathrm{KL}}$",
+            ha="center", fontsize=9, color="#555")
 
     save_fig(fig, "fig1_architecture")
 
