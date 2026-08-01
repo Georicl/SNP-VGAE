@@ -1,0 +1,17 @@
+{
+  "thresholds": {
+    "vgae_score_top5pct": 0.057443140335381025,
+    "cv_max": 0.5,
+    "gwas_nominal": 0.05,
+    "gwas_bonferroni": 5.139802631578947e-06
+  },
+  "counts": {
+    "vgae_significant": 475,
+    "gwas_nominal": 5512,
+    "gwas_bonferroni": 1672,
+    "confirmed": 363,
+    "vgae_unique": 112,
+    "gwas_unique": 5149,
+    "background": 4104
+  }
+}
