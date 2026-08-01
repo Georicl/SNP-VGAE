@@ -2,12 +2,17 @@
 基因型数据共享工具模块
 ====================
 
-提供跨模块复用的基因型预处理函数，确保各模块（M2 图构建、M4 归因等）
+提供跨模块复用的基因型预处理函数，确保各模块（图构建、归因分析等）
 使用一致的缺失值插补策略。
 
-可扩展性:
-  - 后续可支持多种插补策略（中位数、KNN 插补等）
-  - 可扩展为支持自定义缺失值标记（如 NaN / -9 / 其他）
+核心功能:
+  - 基因型矩阵转置与类型转换
+  - 缺失值 (-9) 的 SNP 列均值插补
+  - 全缺失 SNP 的安全处理（填充 0）
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import numpy as np
@@ -15,19 +20,16 @@ import numpy as np
 
 def impute_genotype(genotype: np.ndarray) -> np.ndarray:
     """
-    基因型缺失值插补：-9 → SNP 列均值。
+    基因型缺失值插补：将 -9 替换为对应 SNP 列的均值。
 
-    与 build_node_features 使用相同的插补策略，
-    确保 X = G @ E 的线性关系在缺失位置成立。
+    插补策略与 build_node_features 保持一致，
+    确保 X = G @ E 的线性关系在缺失位置仍然成立。
 
     参数:
         genotype: (M, N) 基因型矩阵，-9 为缺失值（项目约定格式）
 
     返回:
-        G: (N, M) float32，缺失值已填充
-
-    可扩展性:
-      - 后续可参数化插补策略（mean / zero / median）
+        G: (N, M) float32 矩阵，缺失值已填充为列均值
     """
     G = genotype.T.astype(np.float32)  # (N, M)
     missing_mask = G < -0.5

@@ -1,6 +1,7 @@
 """
-VGAE 基因组预测 — 论文图表生成
-================================
+论文图表生成模块
+================
+
 生成 publication-quality 图表 (PDF + PNG 300dpi)
 
 图表清单:
@@ -12,6 +13,10 @@ VGAE 基因组预测 — 论文图表生成
   Fig 6: 预测值 vs 观测值 散点图
 
 运行: PYTHONPATH=pytorch/src uv run python test/generate_figures.py
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-24
 """
 
 import json

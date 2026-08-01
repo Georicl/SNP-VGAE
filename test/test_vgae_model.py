@@ -1,9 +1,9 @@
 """
-M3: VGAE 模型集成测试
-======================
+VGAE 模型集成测试
+==================
 
 使用 test_data/ 下的真实 GRM + 基因型数据，
-验证 M2 输出 → M3 VGAE 模型前向传播 + 损失计算的完整流程。
+验证图构建输出 → VGAE 模型前向传播 + 损失计算的完整流程。
 
 运行方式:
   PYTHONPATH=pytorch/src uv run python test/test_vgae_model.py
@@ -12,6 +12,10 @@ M3: VGAE 模型集成测试
   test_data/total_autosome_grm.grm.bin  — GCTA GRM 矩阵
   test_data/total_autosome_grm.grm.id   — 样本 ID 文件
   test_data/hs_mice_genome_QCed.bed     — PLINK 基因型
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-15
 """
 
 import os

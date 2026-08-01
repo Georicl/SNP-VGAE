@@ -1,6 +1,6 @@
 """
-SNP-VAE 预训练模块测试
-======================
+SNP-VAE 预训练模块单元测试
+==========================
 
 测试内容:
   - preprocess_genotype: 基因型预处理（缺失值填充、类型转换）
@@ -11,6 +11,10 @@ SNP-VAE 预训练模块测试
 
 运行方式:
   PYTHONPATH=pytorch/src uv run pytest test/test_pretrain.py -v
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-11
 """
 
 import numpy as np

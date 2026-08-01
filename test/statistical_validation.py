@@ -1,6 +1,7 @@
 """
-P0: 统计显著性验证
+统计显著性验证模块
 ==================
+
 对 VGAE 基因组预测进行严格的统计检验:
 
   1. 重复 K-fold CV (10× 5-fold, 不同随机种子)
@@ -17,6 +18,10 @@ P0: 统计显著性验证
 
 输出:
   test/result/statistical_validation.json
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-24
 """
 
 import json

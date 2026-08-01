@@ -1,5 +1,5 @@
 """
-M5: K-fold 交叉验证
+K-fold 交叉验证模块
 ====================
 
 编排 VGAE 的 K-fold 交叉验证流程:
@@ -13,10 +13,9 @@ M5: K-fold 交叉验证
   → GraphBuilder → K-fold masks → VGAETrainer × K
   → 汇总 metrics
 
-可扩展性:
-  - 可支持分层抽样（按表型分位数分层）
-  - 可支持重复 K-fold（多次随机划分取平均）
-  - 可支持自定义 fold 划分（保存 fold 索引到文件）
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import os
@@ -46,10 +45,6 @@ def generate_kfold_masks(
 
     返回:
         [(train_mask, val_mask, test_mask), ...] × K
-
-    可扩展性:
-      - 后续可支持分层抽样
-      - 可返回 numpy 索引列表供外部保存/加载
     """
     rng = np.random.RandomState(seed)
     indices = rng.permutation(n_samples)
@@ -144,11 +139,6 @@ def run_kfold_cv(
           'std_metrics':   各指标标准差
           'fold_histories': 每 fold 的训练历史
           'models':        每 fold 训练好的模型列表
-
-    可扩展性:
-      - 后续可支持 stratified K-fold
-      - 可支持自定义 fold 划分
-      - 可并行训练多 fold（需独立进程）
     """
     N = len(labels)
     masks = generate_kfold_masks(N, k_folds, seed)

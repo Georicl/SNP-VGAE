@@ -1,8 +1,8 @@
 """
-M3: VGAE 模型定义与联合损失函数
+VGAE 模型定义与联合损失函数
 ================================
 
-变分图自编码器（Variational Graph Auto-Encoder）用于基因组预测。
+变分图自编码器 (Variational Graph Auto-Encoder) 用于基因组预测。
 
 架构:
   编码器: GCNConv1 → BN → ELU → Dropout → GCNConv2(μ) / GCNConv2(logσ)
@@ -12,11 +12,9 @@ M3: VGAE 模型定义与联合损失函数
 
 联合损失: L = L_pheno + α·L_edge + β·L_KL
 
-可扩展性:
-  - GCN 层数可通过修改 encode() 调整（当前 2 层）
-  - 表型预测 MLP 深度/宽度通过 mlp_hidden 参数控制
-  - 损失权重 α, β 在 vgae_loss 中可调
-  - 所有操作基于 torch.sparse.mm，MPS 完全兼容
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-15
 """
 
 import torch

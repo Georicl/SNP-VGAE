@@ -1,6 +1,6 @@
 """
-M5: VGAE 训练器
-===============
+VGAE 训练器
+===========
 
 封装 VGAE 模型的单 fold 训练循环，包含:
   - 联合损失优化（表型 MSE + 边重建 BCE + KL 散度）
@@ -8,18 +8,15 @@ M5: VGAE 训练器
   - 早停机制（基于验证集 loss）
   - Checkpoint 保存/恢复
   - KL 退火（warmup）
-  - 训练历史记录
-  - tqdm 进度条
+  - 训练历史记录与 tqdm 进度条
 
 数据流:
   adj_norm, adj_raw, node_features, labels + train/val/test mask
   → VGAEModel 训练 → 最佳 checkpoint → 测试集评估
 
-可扩展性:
-  - 可加入学习率调度器（OneCycleLR / ReduceLROnPlateau）
-  - 可集成 TensorBoard / W&B 日志记录
-  - 可支持从 checkpoint 恢复中断的训练
-  - 可支持梯度裁剪
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import torch

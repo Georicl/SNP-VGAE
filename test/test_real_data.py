@@ -14,6 +14,10 @@ SNP-VAE 真实数据集成测试
 注意:
   这是集成测试，运行时间较长（取决于设备和 epochs）。
   可通过命令行参数调整训练规模。
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-11
 """
 
 import argparse

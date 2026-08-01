@@ -1,6 +1,6 @@
 """
-M5: 置换检验
-=============
+置换检验模块
+============
 
 通过打乱表型标签来评估模型预测性能的统计显著性。
 
@@ -9,10 +9,9 @@ M5: 置换检验
   2. 重复 N 次: 随机打乱标签 → 跑 K-fold CV → 记录指标
   3. p-value = (比真实值好的置换次数 + 1) / (N + 1)
 
-可扩展性:
-  - 可支持多指标同时检验（R², MSE, R）
-  - 可支持并行置换（多线程/多进程）
-  - 可保存置换分布用于可视化
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import numpy as np
@@ -66,11 +65,6 @@ def permutation_test(
           'p_value':            单侧 p-value
           'mean_permuted':      置换指标均值
           'std_permuted':       置换指标标准差
-
-    可扩展性:
-      - 后续可支持双侧检验
-      - 可支持自定义检验指标
-      - 可保存置换分布到文件
     """
     rng = np.random.RandomState(seed)
 
