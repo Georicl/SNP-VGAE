@@ -1,16 +1,15 @@
 """
-M5: 训练可视化模块
-==================
+训练可视化模块
+==============
 
 提供 VGAE 训练过程的可视化:
   - 训练/验证损失曲线
   - K-fold 指标对比图
   - 置换检验分布图
 
-可扩展性:
-  - 可加入隐空间 t-SNE/UMAP 可视化
-  - 可加入 SNP 归因曼哈顿图
-  - 可支持导出为 PDF/SVG 矢量图
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import matplotlib
@@ -31,10 +30,6 @@ def plot_training_curves(
         history:   训练历史 dict，包含 train_loss, val_loss 等列表
         save_path: 图片保存路径（None 则 plt.show()）
         title:     图标题
-
-    可扩展性:
-      - 可支持自定义子图布局
-      - 可加入学习率变化曲线
     """
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -87,10 +82,6 @@ def plot_kfold_results(
         fold_metrics: 每 fold 的指标 dict 列表
         save_path:    图片保存路径
         title:        图标题
-
-    可扩展性:
-      - 可支持箱线图展示分布
-      - 可加入均值 ± 标准差误差线
     """
     metrics_keys = list(fold_metrics[0].keys())
     n_folds = len(fold_metrics)
@@ -140,10 +131,6 @@ def plot_permutation_results(
         p_value:         p-value
         metric_key:      指标名称
         save_path:       图片保存路径
-
-    可扩展性:
-      - 可支持核密度估计叠加
-      - 可标注置信区间
     """
     fig, ax = plt.subplots(figsize=(8, 5))
 

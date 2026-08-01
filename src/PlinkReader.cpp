@@ -1,3 +1,15 @@
+/**
+ * @file PlinkReader.cpp
+ * @brief PLINK 二进制基因型文件读取器实现
+ *
+ * 实现 PLINK .bed/.bim/.fam 文件的解析逻辑，
+ * 将二进制基因型数据解码为 0/1/2/-9 编码的 Eigen 矩阵。
+ *
+ * @author Xiang Yang
+ * @email Georicl@outlook.com
+ * @date 2026-06-27
+ */
+
 #include "PlinkReader.h"
 
 #include <fstream>

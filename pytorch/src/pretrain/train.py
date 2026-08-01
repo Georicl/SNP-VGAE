@@ -1,16 +1,20 @@
 """
-M1: SNP-VAE 训练流程
-====================
+SNP-VAE 训练流程
+================
 
 将预处理、模型创建、训练循环、早停、嵌入提取串联为完整训练流程。
 
 数据流:
   genotype (M, N) → preprocess → 模型训练 → 早停恢复最佳权重 → 提取嵌入 (M, D_snp)
 
-可扩展性:
-  - 后续可加入学习率调度器（ReduceLROnPlateau）
-  - 可支持从 checkpoint 恢复训练
-  - 可加入 TensorBoard/WandB 日志记录
+训练特性:
+  - KL 退火: 前 warmup_epochs 轮 β 从 0 线性增大到目标值
+  - 早停机制: 基于验证集损失，退火期间不计入早停
+  - 学习率调度: ReduceLROnPlateau 自动降低学习率
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-11
 """
 
 import numpy as np

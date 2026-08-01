@@ -1,14 +1,43 @@
+"""
+PLINK .bed 二进制基因型读取模块
+====================================
+
+从 PLINK .bed 二进制文件中解码基因型数据，将 2-bit 压缩编码
+还原为标准的 0/1/2 加性编码矩阵。
+
+.bed 文件结构:
+  - 前 3 字节: 魔数 (0x6C, 0x1B, 0x01)，标识 SNP-major 存储顺序
+  - 后续数据: 每个 SNP 占用 ceil(N/4) 字节，每 2-bit 编码一个样本
+
+2-bit 编码映射:
+  00 → 0 (AA, 第一等位基因纯合)
+  01 → -9 (缺失)
+  10 → 1 (AB, 杂合)
+  11 → 2 (BB, 第二等位基因纯合)
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-06
+"""
+
 import numpy as np
 
 
 def genotype_read(genotype_file: str, num_samples: int, num_snps: int) -> np.ndarray:
     """
-    基因型载入函数, 提供基因型载入窗口, 接受Plink的输出文件, 并将基因型的二进制编码还原为0/1/2
-    genotype_file: plink输出文件地址, .bed文件为基因型文件, 其头三字节为魔数, 后所有为SNP或样本顺序排列的SNP基因型.
-    num_samples: 样本数量, 当bed文件为SNP顺序排列时为样本数量, 当bed文件为样本顺序排列时为SNP数量.
-    num_snps: snp总数, 用于展开bed文件
+    从 PLINK .bed 文件读取基因型矩阵，解码 2-bit 压缩为 0/1/2/-9 编码。
 
-    return: 一个np数组,为基因型矩阵(0/1/2编码)
+    参数:
+        genotype_file: PLINK .bed 文件路径
+        num_samples:   样本数量（用于确定每个 SNP 的字节块大小）
+        num_snps:      SNP 总数（用于重塑矩阵维度）
+
+    返回:
+        np.ndarray: 基因型矩阵 (num_snps, num_samples)，
+                    值为 0/1/2 加性编码，-9 表示缺失
+
+    异常:
+        ValueError: 当 .bed 文件魔数不匹配时抛出
     """
     with open(genotype_file, "rb") as f:
         magic = f.read(3)  # 依据bed文件格式, 前三个字节为魔法块, 判断顺序模式

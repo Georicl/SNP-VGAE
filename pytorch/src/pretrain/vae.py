@@ -1,5 +1,5 @@
 """
-M1: SNP-VAE 模型定义与损失函数
+SNP-VAE 模型定义与损失函数
 ================================
 
 提供 SNP-VAE 变分自编码器的网络结构和训练损失。
@@ -9,10 +9,13 @@ M1: SNP-VAE 模型定义与损失函数
            → 分叉为 μ(128→D_snp) 和 logσ²(128→D_snp)
   Decoder: Linear(D_snp, 128) → ELU → Linear(128, 256) → ELU → Linear(256, N)
 
-可扩展性:
-  - 网络深度/宽度可通过修改 encoder/decoder 的 Sequential 层数调整
-  - 隐空间维度 d_snp 通过参数控制，默认为 64
-  - β-VAE 的 β 参数在 vae_loss 中可调，控制重建质量与隐空间正则化的平衡
+损失函数:
+  L = L_recon + β · L_KL
+  其中 L_recon 为 MSE 重建损失，L_KL 为 KL 散度正则化项
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-11
 """
 
 import torch

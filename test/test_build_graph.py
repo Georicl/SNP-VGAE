@@ -1,6 +1,6 @@
 """
-M2: 样本图构建集成测试
-======================
+样本图构建集成测试
+==================
 
 使用 test_data/ 下的真实 GRM 数据 + 模拟 SNP 嵌入，
 验证 KNN 图构建和节点特征聚合的正确性。
@@ -12,6 +12,10 @@ M2: 样本图构建集成测试
   test_data/total_autosome_grm.grm.bin  — GCTA GRM 矩阵
   test_data/total_autosome_grm.grm.id   — 样本 ID 文件
   test_data/hs_mice_genome_QCed.bed     — PLINK 基因型（用于特征聚合测试）
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-15
 """
 
 import os

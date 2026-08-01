@@ -1,6 +1,7 @@
 """
 VGAE 基因组预测 — 统一评测框架
 ================================
+
 对多个高遗传力性状执行标准化评测流程:
   1. SNP-VAE 预训练 (200 epochs, 默认参数)
   2. BLUP 基线 (GRM Ridge, 5-fold CV)
@@ -15,6 +16,10 @@ VGAE 基因组预测 — 统一评测框架
   test/result/<trait>/metrics.json   — 逐性状指标
   test/result/<trait>/snp_embeddings.npy — SNP 嵌入
   test/result/summary.json           — 总体汇总
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import json

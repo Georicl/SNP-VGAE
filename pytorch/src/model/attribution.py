@@ -1,5 +1,5 @@
 """
-M4: SNP 归因模块
+SNP 归因分析模块
 ================
 
 从训练好的 VGAE 模型反投影每个 SNP 对表型预测的贡献度。
@@ -15,22 +15,16 @@ M4: SNP 归因模块
                = Σ_d ∇X[i,d] · E[j,d]
                = ⟨∇X_i, E_j⟩
 
-  其中 ∇X = ∂s/∂X 由 torch.autograd.grad 精确计算，
-  穿透全部非线性层（2层 GCN + BN + ELU + MLP）。
-
   SNP j 的群体级贡献:
     score_j = Σ_i G[i,j] · ⟨∇X_i, E_j⟩
 
   矩阵形式（路径 A，内存最优）:
     W = G^T @ ∇X            → (M, D_snp)
     scores = (W * E).sum(1)  → (M,)
-    中间张量仅 (M, D_snp) ≈ 622KB（M=9728, D_snp=64）
 
-可扩展性:
-  - 支持 per-individual 归因（个性化 SNP 分析）
-  - 支持跨 CV fold 聚合（mean / median / max_abs）
-  - 可扩展为 Integrated Gradients（解决深度网络梯度饱和问题）
-  - 可按染色体分组输出（需传入 snp_chrom 信息）
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import numpy as np
@@ -60,18 +54,11 @@ def compute_snp_scores(
         adj_norm:       (N, N) 稀疏归一化邻接矩阵
         genotype:       (M, N) 基因型矩阵，-9 为缺失（项目约定格式）
         snp_embeddings: (M, D_snp) SNP 嵌入矩阵
-        aggregate:      "sum"(默认) / "mean" / "abs_sum"
-                        - "sum":    保留符号的群体总贡献
-                        - "mean":   群体平均贡献（sum / N）
-                        - "abs_sum": 绝对值之和（需逐个体计算）
+        aggregate:      聚合方式: "sum"(默认) / "mean" / "abs_sum"
         device:         计算设备
 
     返回:
         snp_scores: (M,) 每个 SNP 的贡献分数
-
-    可扩展性:
-      - "abs_sum" 需逐个体梯度，计算量 O(N) 次 autograd
-      - 后续可支持按染色体分组的归因汇总
     """
     model.eval()
 
@@ -130,16 +117,12 @@ def compute_individual_scores(
         adj_norm:          (N, N) 稀疏归一化邻接
         genotype:          (M, N) 基因型矩阵，-9 为缺失
         snp_embeddings:    (M, D_snp) SNP 嵌入
-        batch_individuals: 批量大小（仅用于进度提示，autograd 逐个体执行）
+        batch_individuals: 批量大小（仅用于进度提示）
         device:            计算设备
 
     返回:
         ind_scores: (N, M) — 个体 i 在 SNP j 上的贡献
         pop_scores: (M,)   — 跨个体聚合（绝对值之和）
-
-    可扩展性:
-      - N=2002 时约 2002 次 autograd.grad 调用，单次 <5ms，总计 ~10s
-      - 后续可用 torch.func.vmap 加速批量 jacobian 计算
     """
     model.eval()
     N = node_features.shape[0]
@@ -199,9 +182,6 @@ def top_snps(
           'indices': (K,) int — SNP 索引
           'scores':  (K,) float — 贡献分数（保留符号）
           'names':   (K,) str | None — SNP 名称
-
-    可扩展性:
-      - 后续可按染色体分组返回 top-K
     """
     k = min(top_k, scores.shape[0])
     top_vals, top_idx = torch.topk(scores.abs(), k)
@@ -230,15 +210,10 @@ def aggregate_cv_scores(
 
     参数:
         fold_scores: 每折 (M,) score 张量列表
-        aggregate:   "mean"(默认) / "median" / "max_abs"
+        aggregate:   聚合方式: "mean"(默认) / "median" / "max_abs"
 
     返回:
         (M,) 聚合后的分数
-
-    可扩展性:
-      - "mean": 最稳定，推荐默认
-      - "median": 对异常 fold 鲁棒
-      - "max_abs": 保守估计，取最大效应
     """
     stacked = torch.stack(fold_scores, dim=0)  # (K_folds, M)
 

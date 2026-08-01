@@ -1,3 +1,20 @@
+/**
+ * @file PlinkReader.h
+ * @brief PLINK 二进制基因型文件读取器
+ *
+ * 提供 PLINK .bed/.bim/.fam 三件套文件的解析功能，
+ * 将二进制基因型数据解码为 Eigen 矩阵格式。
+ *
+ * 支持的文件格式:
+ *   - .bed: 二进制基因型文件 (SNP-major 模式)
+ *   - .bim: SNP 位点信息文件
+ *   - .fam: 样本家系信息文件
+ *
+ * @author Xiang Yang
+ * @email Georicl@outlook.com
+ * @date 2026-06-27
+ */
+
 #ifndef PLINK_READER_H
 #define PLINK_READER_H
 

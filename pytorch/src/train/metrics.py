@@ -1,12 +1,15 @@
 """
-M5: 评估指标模块
-================
+评估指标模块
+============
 
 提供基因组预测的标准评估指标: MSE, MAE, Pearson R, R²。
 
-可扩展性:
-  - 后续可加入 Spearman 秩相关、分类指标（AUC 等）
-  - 可支持按染色体/功能区域分组评估
+所有指标函数同时支持 numpy 数组和 PyTorch 张量输入，
+便于在训练循环和离线评估中复用。
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-23
 """
 
 import numpy as np
@@ -57,11 +60,12 @@ def evaluate_all(
     """
     一次性计算所有评估指标。
 
+    参数:
+        y_pred: 预测值数组/张量
+        y_true: 真实值数组/张量
+
     返回:
         {'mse': ..., 'mae': ..., 'r': ..., 'r2': ...}
-
-    可扩展性:
-      - 后续可加入更多指标（Spearman、分类 AUC 等）
     """
     return {
         "mse": mse_loss(y_pred, y_true),

@@ -1,14 +1,16 @@
 """
-M3: GCN 传播层
-==============
+GCN 图卷积传播层
+================
 
-实现纯 torch.sparse.mm 的图卷积传播，不依赖 PyTorch Geometric。
+实现基于纯 torch.sparse.mm 的图卷积传播，不依赖 PyTorch Geometric。
 核心公式: H = A_norm @ X @ W + b
 
-可扩展性:
-  - 支持任意输入/输出特征维度
-  - 可堆叠多层 GCNConv 构建更深的编码器
-  - MPS 后端完全兼容（无 scatter/gather 操作）
+其中 A_norm 为 D^(-1/2) A D^(-1/2) 对称归一化稀疏邻接矩阵。
+该实现完全兼容 MPS 后端（无 scatter/gather 操作）。
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-15
 """
 
 import torch

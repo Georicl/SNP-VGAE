@@ -1,3 +1,21 @@
+"""
+样本图构建器
+============
+
+从 GRM 矩阵构建 KNN 稀疏邻接图，并执行 GCN 对称归一化，
+同时将基因型与 SNP 嵌入聚合成节点特征。
+
+核心算法:
+  1. Top-K 近邻选择: 从 GRM 中为每个样本选取遗传相似度最高的 K 个邻居
+  2. 对称化: element-wise max 确保图的无向性
+  3. GCN 归一化: D^(-1/2) · A · D^(-1/2) 对称归一化
+  4. 节点特征聚合: X = G_imputed @ E，将 SNP 嵌入线性映射到样本空间
+
+作者: Xiang Yang
+邮箱: Georicl@outlook.com
+创建时间: 2026-07-15
+"""
+
 from data.grm import grm_reader
 from data.genotype_utils import impute_genotype
 import numpy as np
@@ -19,18 +37,14 @@ class GraphBuilder:
         从 GRM 矩阵构建 KNN 稀疏邻接矩阵（核心算法，不含文件 I/O）。
 
         参数:
-            grm: (N, N) GRM 对称矩阵 (np.float32)
-            k: 每个节点的近邻数
+            grm:        (N, N) GRM 对称矩阵 (np.float32)
+            k:          每个节点的近邻数
             self_loops: 是否添加自环（权重=GRM对角线值 G[i,i]）
-            symmetric: 是否对称化 (取 element-wise max)
+            symmetric:  是否对称化 (取 element-wise max)
 
         返回:
             adj_norm: (N, N) 稀疏张量, GCN 对称归一化 D^(-1/2)·A·D^(-1/2)
             adj_raw:  (N, N) 稀疏张量, 原始 KNN 邻接（含自环），用于边重建损失
-
-        可扩展性:
-            - 对称化策略可替换（如 add 代替 max）
-            - 归一化方式可扩展为 random walk 归一化 D^(-1)A
         """
         N = grm.shape[0]
 
@@ -132,13 +146,17 @@ class GraphBuilder:
                             snp_embeddings: np.ndarray,
                             ) -> torch.Tensor:
         """
-        聚合SNP嵌入为节点的特征:
-        X = G_imputed @ E
-        输入:
-            genotype: 基因型矩阵 (M, N), -9 为缺失值
-            snp_embeddings: (M, D_snp) SNP 嵌入矩阵
+        聚合 SNP 嵌入为节点特征: X = G_imputed @ E。
+
+        通过插补后的基因型矩阵与 SNP 嵌入矩阵的线性组合，
+        将每个样本表示为其 SNP 嵌入的加权和。
+
+        参数:
+            genotype:       基因型矩阵 (M, N)，-9 为缺失值
+            snp_embeddings: SNP 嵌入矩阵 (M, D_snp)
+
         返回:
-            node_features: 返回节点特征张量 (N, D_snp)
+            node_features: 节点特征张量 (N, D_snp)
         """
         # --- 缺失值插补: -9 → SNP 列均值（共享逻辑） ---
         G = impute_genotype(genotype)  # (N, M)
