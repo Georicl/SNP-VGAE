@@ -5,14 +5,16 @@ SNP-VGAE 是一个两阶段深度学习框架，用于基因组表型预测。�
 ## 方法概览
 
 ```mermaid
-graph TB
-    A[PLINK 基因型 BED/BIM/FAM] --> B[SNP-VAE 预训练]
-    B --> C[64 维 SNP 嵌入]
-    D[GCTA GRM 矩阵] --> E[KNN 样本图构建]
+graph LR
+    A["PLINK 基因型"] --> B["SNP-VAE 预训练"]
+    B --> C["64 维 SNP 嵌入"]
+    D["GCTA GRM"] --> E["VGAE 联合训练"]
     C --> E
-    E --> F[VGAE 联合训练]
-    F --> G[表型预测]
-    F --> H[SNP 归因与显著性分析]
+    F["表型与协变量"] --> E
+    E --> G["个体表型预测"]
+    E --> H["SNP 归因分析"]
+    G --> I["K-fold CV 与置换检验"]
+    H --> I
 ```
 
 1. **SNP-VAE 预训练**：对基因型矩阵做无监督变分自编码，输出每个 SNP 的低维嵌入（默认 64 维），捕获非线性位点关联；采用 KL 散度预热（warmup）与早停保障收敛。
