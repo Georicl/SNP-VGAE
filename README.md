@@ -1,6 +1,6 @@
-# GAT：基于 SNP-VAE + VGAE 的基因组预测框架
+# SNP-VGAE：基于 SNP-VAE + VGAE 的基因组预测框架
 
-GAT（Genomic Attention/Graph）是一个两阶段深度学习框架，用于基因组表型预测。框架先通过 **SNP-VAE** 对 SNP 基因型进行无监督预训练、学习位点级低维嵌入，再基于遗传关系矩阵（GRM）构建样本 KNN 图，利用 **变分图自编码器（VGAE）** 联合优化表型预测与图结构重建，显著提升复杂性状的预测精度，并支持 SNP 级归因以解释功能位点。
+SNP-VGAE 是一个两阶段深度学习框架，用于基因组表型预测。框架先通过 **SNP-VAE** 对 SNP 基因型进行无监督预训练、学习位点级低维嵌入，再基于遗传关系矩阵（GRM）构建样本 KNN 图，利用 **变分图自编码器（VGAE）** 联合优化表型预测与图结构重建，显著提升复杂性状的预测精度，并支持 SNP 级归因以解释功能位点。
 
 ## 方法概览
 
@@ -23,7 +23,7 @@ graph TB
 ## 项目结构
 
 ```
-GAT/
+SNP-VGAE/
 ├── pytorch/src/          # Python 主体实现
 │   ├── data/             # 数据层：PLINK BED/BIM/FAM、GCTA GRM、表型、协变量解析
 │   │   ├── genotype.py       # BED 位运算解码，返回 (M, N) 基因型矩阵

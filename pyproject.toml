@@ -1,7 +1,7 @@
 [project]
-name = "gat"
+name = "snp-vgae"
 version = "0.1.0"
-description = "Add your description here"
+description = "SNP-VAE + VGAE 基因组预测框架"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
