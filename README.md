@@ -5,16 +5,54 @@ SNP-VGAE 是一个两阶段深度学习框架，用于基因组表型预测。�
 ## 方法概览
 
 ```mermaid
-graph LR
-    A["PLINK 基因型"] --> B["SNP-VAE 预训练"]
-    B --> C["64 维 SNP 嵌入"]
-    D["GCTA GRM"] --> E["VGAE 联合训练"]
-    C --> E
-    F["表型与协变量"] --> E
-    E --> G["个体表型预测"]
-    E --> H["SNP 归因分析"]
-    G --> I["K-fold CV 与置换检验"]
-    H --> I
+graph TB
+    subgraph M0["M0 - 数据输入层"]
+        PLINK["PLINK .bed/.bim/.fam"]
+        GRM["GCTA GRM 矩阵"]
+        PHENO["表型与协变量"]
+        CPP["Cxx PlinkReader - 位运算解码 2-bit"]
+        PY["Python 与 NumPy - 数据加载与质控"]
+        PLINK --> CPP
+        GRM --> PY
+        PHENO --> PY
+    end
+
+    subgraph M1["M1 - SNP 预训练层"]
+        VAE["VAE 预训练 - 非线性降维"]
+        EMB["SNP 嵌入 E (M, D_snp)"]
+        VAE --> EMB
+    end
+
+    subgraph M2["M2 - 图构建层"]
+        KNN["GRM to KNN 稀疏邻接图 - GCN 对称归一化"]
+        FEAT["节点特征聚合 - X = G x E"]
+    end
+
+    subgraph M3["M3 - 模型训练层"]
+        GCN["GCN 编码器 - torch.sparse.mm"]
+        LOSS["联合损失 - BCE(边) 与 MSE(表型) 与 KL"]
+        VGAE["VGAE 隐表示 Z"]
+        GCN --> LOSS
+        LOSS --> VGAE
+    end
+
+    subgraph M4["M4-M5 - 输出层"]
+        PRED["个体表型预测"]
+        ATTR["SNP 归因分析 - 线性反投影"]
+        CV["K-fold CV 与置换检验"]
+        VGAE --> PRED
+        VGAE --> ATTR
+        PRED --> CV
+        ATTR --> CV
+    end
+
+    CPP --> VAE
+    PY --> KNN
+    PY --> FEAT
+    EMB --> FEAT
+    GRM --> KNN
+    KNN --> GCN
+    FEAT --> GCN
 ```
 
 1. **SNP-VAE 预训练**：对基因型矩阵做无监督变分自编码，输出每个 SNP 的低维嵌入（默认 64 维），捕获非线性位点关联；采用 KL 散度预热（warmup）与早停保障收敛。
