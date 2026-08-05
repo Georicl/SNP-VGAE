@@ -1,0 +1,4 @@
+# Exclude test data Perl scripts from language statistics
+test_data/phenotypes/*.pl linguist-vendored
+test_data/phenotypes/*.pl.1 linguist-vendored
+test_data/phenotypes/*.pl.2 linguist-vendored
