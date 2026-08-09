@@ -19,14 +19,6 @@ uv run python test/test_real_data.py --epochs 200 --d-snp 64 --batch-size 512
 uv run python test/predict_and_attribute_no_vae.py
 ```
 
-单元测试：
-
-```bash
-uv run pytest test/test_pretrain.py test/test_build_graph.py test/test_vgae_model.py -v
-```
-
-环境：Python >= 3.13（uv 管理），PyTorch >= 2.12。MPS 后端和部分 PyG 操作有已知兼容性问题，建议跑 CPU 或 CUDA。
-
 ## 方法
 
 ```mermaid
@@ -85,7 +77,7 @@ graph TB
 1. **SNP-VAE 预训练**：基因型矩阵过一遍变分自编码，每个 SNP 得到一个 64 维嵌入。KL 用 warmup，早停防塌缩。这一步可选——无 VAE 模式直接用插补后的原始基因型当节点特征。
 2. **建图**：拿 GCTA GRM 建 K=30 的 KNN 稀疏图，节点是个体，边是亲缘关系，做 GCN 对称归一化。
 3. **VGAE 训练**：GCN 编码器全部用 `torch.sparse.mm` 实现，不依赖 PyG。损失是 MSE（表型）+ BCE（边重建，带负采样）+ KL，端到端训。
-4. **归因与验证**：编码器反投影算 SNP 归因分数；5 折交叉验证评估预测，置换检验给显著性，最后和 PLINK GWAS 对账。
+4. **归因与验证**：编码器反投影算 SNP 归因分数；5 折交叉验证评估预测，置换检验给显著性，最后和 PLINK GWAS 结果比对。
 
 两种输入模式：
 
@@ -183,9 +175,7 @@ SNP-VGAE/
 └── pyproject.toml        # uv 依赖声明
 ```
 
-## 已知局限
-
-不回避的问题，读结果前先知道这些：
+## 局限
 
 1. **性状间不稳定**。四个性状只有 HDL、ALP 有明确提升；Haem.MCV 上比 BLUP 低 22.6%。模型对特定遗传结构的性状不总是有效。
 2. **归因和 GWAS 只有部分重合**。归因分数和 GWAS 显著性的 Spearman ρ 只有 0.233；Top-50 里和 GWAS 重合的只有 1 个（Top-100 是 10 个，Top-500 是 175 个）。两种方法对"重要位点"的判断一致性有限，生物学解释要小心。

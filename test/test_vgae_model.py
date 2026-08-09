@@ -29,6 +29,7 @@ from data.genotype import genotype_read
 from graph.build_graph import GraphBuilder
 from model.gcn import GCNConv
 from model.vgae import VGAEModel, vgae_loss
+from model.vgae_non_vae import VGAENoVAE
 
 # ============================================================================
 # 数据路径配置
@@ -133,9 +134,11 @@ def test_vgae_model(device: str = "cpu"):
     assert out['y_pred'].shape == (N,), f"y_pred 形状错误: {out['y_pred'].shape}"
     assert out['z'].shape == (N, D_z), f"z 形状错误: {out['z'].shape}"
     assert out['mu'].shape == (N, D_z), f"mu 形状错误: {out['mu'].shape}"
-    assert out['logvar'].shape == (N, D_z), f"logvar 形状错误: {out['logvar'].shape}"
+    assert out['logvar'].shape == (
+        N, D_z), f"logvar 形状错误: {out['logvar'].shape}"
     # edge_scores 应为 (E,) 一维向量，E 为边数
-    assert out['edge_scores'].dim() == 1, f"edge_scores 应为一维: {out['edge_scores'].shape}"
+    assert out['edge_scores'].dim(
+    ) == 1, f"edge_scores 应为一维: {out['edge_scores'].shape}"
     assert out['edge_index'].shape[0] == 2, f"edge_index 应为 (2, E): {out['edge_index'].shape}"
 
     # 数值检查
@@ -147,7 +150,8 @@ def test_vgae_model(device: str = "cpu"):
     assert out['edge_scores'].min() >= 0, "edge_scores 最小值 < 0"
     assert out['edge_scores'].max() <= 1, "edge_scores 最大值 > 1"
 
-    print(f"  edge_scores 范围: [{out['edge_scores'].min():.4f}, {out['edge_scores'].max():.4f}]")
+    print(
+        f"  edge_scores 范围: [{out['edge_scores'].min():.4f}, {out['edge_scores'].max():.4f}]")
     print(f"  边数: {out['edge_scores'].shape[0]}")
     print(f"  ✅ VGAEModel 前向传播通过")
 
@@ -243,10 +247,13 @@ def test_end_to_end_real_data(device: str):
     out = model(x, adj_norm)
     forward_time = time.time() - start
 
-    print(f"  y_pred:      {out['y_pred'].shape}, 范围 [{out['y_pred'].min():.4f}, {out['y_pred'].max():.4f}]")
+    print(
+        f"  y_pred:      {out['y_pred'].shape}, 范围 [{out['y_pred'].min():.4f}, {out['y_pred'].max():.4f}]")
     print(f"  z:           {out['z'].shape}")
-    print(f"  mu:          {out['mu'].shape}, 范围 [{out['mu'].min():.4f}, {out['mu'].max():.4f}]")
-    print(f"  logvar:      {out['logvar'].shape}, 范围 [{out['logvar'].min():.4f}, {out['logvar'].max():.4f}]")
+    print(
+        f"  mu:          {out['mu'].shape}, 范围 [{out['mu'].min():.4f}, {out['mu'].max():.4f}]")
+    print(
+        f"  logvar:      {out['logvar'].shape}, 范围 [{out['logvar'].min():.4f}, {out['logvar'].max():.4f}]")
     print(f"  edge_scores: {out['edge_scores'].shape}")
     print(f"  前向传播耗时: {forward_time*1000:.1f}ms")
 
@@ -308,6 +315,72 @@ def test_end_to_end_real_data(device: str):
     print(f"  ✅ 端到端测试通过 (M2 → M3)")
 
 
+def test_vgae_no_vae_real_data(device: str):
+    """测试 5: VGAENoVAE 端到端（真实基因型，无 VAE）"""
+    print("\n" + "=" * 60)
+    print(f"[测试 5] VGAENoVAE 端到端 (真实基因型, device={device})")
+    print("=" * 60)
+
+    N = DEFAULT_N_SAMPLES
+    K = 30  # 近邻
+
+    print(" [数据] 读取基因型。。。")
+    genotype = genotype_read(DEFAULT_BED_FILE, N, DEFAULT_N_SNPS)
+    print(f" 基因型形: {genotype.shape}")
+
+    # - 构建图 -
+    print(" 构建KNN图。。。")
+    grm = grm_reader(DEFAULT_GRM_BIN, N)
+    builder = GraphBuilder()
+    adj_norm, adj_raw = builder.knn_graph_builder(grm, k=K)
+    adj_norm = adj_norm.to(device)
+    adj_raw = adj_raw.to(device)
+    print(f"  adj_norm: {adj_norm.shape}, nnz={adj_norm._nnz()}")
+
+    # 导入节点特征
+    x = builder.build_node_features(genotype=genotype)  # 使用原向量
+    x = x.to(device=device)
+    d_snp = x.shape[1]  # 获取SNP数量
+    print(f" 节点特征形状: {x.shape}")
+
+    # 创建VGAENoVAE
+    print(f" 创建VGAENoVAE(d_snp={d_snp})。。。")
+    model = VGAENoVAE(d_snp=d_snp)
+    model = model.to(device=device)
+
+    n_params = sum(p.numel() for p in model.parameters())  # 获取参数
+    print(f" 模型参数量：{n_params:,}")
+
+    # 前向传播
+    print(" [训练]前向传播。。。")
+    out = model(x, adj_norm)
+    print(f"  y_pred: {out['y_pred'].shape}")
+    print(f"  z: {out['z'].shape}")
+    print(f"  mu: {out['mu'].shape}")
+
+    # 计算loss
+    y_true = torch.randn(N, device=device)
+    total, pheno, edge, kl = vgae_loss(
+        out['y_pred'], y_true,
+        out['z'], out['edge_index'], adj_raw,
+        out['mu'], out['logvar']
+    )
+    print(f"  total_loss: {total.item():.4f}")
+    print(f"  pheno_loss: {pheno.item():.4f}")
+    print(f"  edge_loss: {edge.item():.4f}")
+    print(f"  kl_loss: {kl.item():.4f}")
+
+    # 反向传播
+    total.backward()
+    has_nan_grad = any(
+        p.grad is not None and torch.isnan(p.grad).any()
+        for p in model.parameters()
+    )
+    assert not has_nan_grad, "梯度含 NaN"
+    print(f"  反向传播: 成功")
+    print(f"  VGAENoVAE 端到端测试通过")
+
+
 def main():
     device = auto_detect_device()
 
@@ -332,6 +405,9 @@ def main():
 
     # 测试 4: 端到端（真实数据）
     test_end_to_end_real_data(device)
+
+    # 测试 5: 不使用VAE进行测试
+    test_vgae_no_vae_real_data(device)
 
     total_elapsed = time.time() - total_start
     print("\n" + "=" * 60)

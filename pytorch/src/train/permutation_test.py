@@ -22,7 +22,7 @@ from train.cross_validation import run_kfold_cv
 
 def permutation_test(
     genotype: np.ndarray,
-    snp_embeddings: np.ndarray,
+    snp_embeddings: np.ndarray | None,
     grm: np.ndarray,
     labels: np.ndarray,
     n_permutations: int = 100,
@@ -33,6 +33,7 @@ def permutation_test(
     k_neighbors: int = 30,
     d_snp: int = 64,
     d_hidden: int = 128,
+    d_hidden2: int = 128,
     d_z: int = 32,
     dropout: float = 0.5,
     mlp_hidden: int = 64,
@@ -50,7 +51,7 @@ def permutation_test(
 
     参数:
         genotype:       (M, N) 基因型矩阵
-        snp_embeddings: (M, D_snp) SNP 嵌入
+        snp_embeddings: (M, D_snp) SNP 嵌入；None 表示原始基因型模式
         grm:            (N, N) GRM 矩阵
         labels:         (N,) 表型值
         n_permutations: 置换次数
@@ -84,6 +85,7 @@ def permutation_test(
         k_neighbors=k_neighbors,
         d_snp=d_snp,
         d_hidden=d_hidden,
+        d_hidden2=d_hidden2,
         d_z=d_z,
         dropout=dropout,
         mlp_hidden=mlp_hidden,
@@ -127,6 +129,7 @@ def permutation_test(
             k_neighbors=k_neighbors,
             d_snp=d_snp,
             d_hidden=d_hidden,
+            d_hidden2=d_hidden2,
             d_z=d_z,
             dropout=dropout,
             mlp_hidden=mlp_hidden,
@@ -156,7 +159,8 @@ def permutation_test(
     if progress:
         print(f"\n\n[置换检验] 结果:")
         print(f"  真实 {metric_key}:       {real_score:.4f}")
-        print(f"  置换均值 ± 标准差: {permuted_scores.mean():.4f} ± {permuted_scores.std():.4f}")
+        print(
+            f"  置换均值 ± 标准差: {permuted_scores.mean():.4f} ± {permuted_scores.std():.4f}")
         print(f"  p-value:           {p_value:.4f}")
         print(f"  {'显著' if p_value < 0.05 else '不显著'} (α=0.05)")
 

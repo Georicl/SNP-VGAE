@@ -143,7 +143,7 @@ class GraphBuilder:
 
     def build_node_features(self,
                             genotype: np.ndarray,
-                            snp_embeddings: np.ndarray,
+                            snp_embeddings: np.ndarray | None = None,  # 使用全SNP矩阵训练
                             ) -> torch.Tensor:
         """
         聚合 SNP 嵌入为节点特征: X = G_imputed @ E。
@@ -155,13 +155,17 @@ class GraphBuilder:
             genotype:       基因型矩阵 (M, N)，-9 为缺失值
             snp_embeddings: SNP 嵌入矩阵 (M, D_snp)
 
+        如果不提供: X = G (原始基因型模式)
+
         返回:
             node_features: 节点特征张量 (N, D_snp)
         """
         # --- 缺失值插补: -9 → SNP 列均值（共享逻辑） ---
         G = impute_genotype(genotype)  # (N, M)
-        E = snp_embeddings.astype(np.float32)  # (M, D_snp)
-
-        X = G @ E
+        if snp_embeddings is not None:
+            E = snp_embeddings.astype(np.float32)  # (M, D_snp)
+            X = G @ E
+        else:
+            X = G
 
         return torch.from_numpy(X)

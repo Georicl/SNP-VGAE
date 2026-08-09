@@ -65,7 +65,8 @@ def compute_snp_scores(
     # ---- Step 1: 插补基因型并转为 Tensor ----
     G_np = impute_genotype(genotype)  # (N, M)
     G = torch.from_numpy(G_np).to(device)       # (N, M)
-    E = torch.from_numpy(snp_embeddings.astype(np.float32)).to(device)  # (M, D_snp)
+    E = torch.from_numpy(snp_embeddings.astype(
+        np.float32)).to(device)  # (M, D_snp)
 
     # ---- Step 2: 前向传播，获取 ∇X = ∂(Σŷ)/∂X ----
     X = node_features.clone().detach().to(device).requires_grad_(True)
@@ -90,6 +91,57 @@ def compute_snp_scores(
     elif aggregate == "abs_sum":
         # abs_sum 需要逐个体计算（见 compute_individual_scores）
         # 此处用群体级 |score_j| 作为近似
+        snp_scores = snp_scores.abs()
+
+    return snp_scores.detach().cpu()
+
+
+def compute_snp_scores_raw(
+    model: VGAEModel,
+    node_features: Tensor,
+    adj_norm: Tensor,
+    genotype: np.ndarray,
+    aggregate: str = "sum",
+    device: str = "cpu",
+) -> Tensor:
+    """
+    原始基因型模式的 SNP 归因（无 VAE 嵌入）。
+
+    此时节点特征 X = G（插补后的基因型本身），梯度可直接分解:
+      score_j = Σ_i G[i,j] · ∇X[i,j]
+
+    等价于 compute_snp_scores 中取 E = I（单位投影）的特例，
+    无需反投影步骤，无近似误差。
+
+    参数:
+        model:          已训练的 VGAEModel / VGAENoVAE（自动切 eval 模式）
+        node_features:  (N, M) 节点特征 X = G
+        adj_norm:       (N, N) 稀疏归一化邻接矩阵
+        genotype:       (M, N) 基因型矩阵，-9 为缺失（项目约定格式）
+        aggregate:      聚合方式: "sum"(默认) / "mean" / "abs_sum"
+        device:         计算设备
+
+    返回:
+        snp_scores: (M,) 每个 SNP 的贡献分数
+    """
+    model.eval()
+
+    G_np = impute_genotype(genotype)  # (N, M)
+    G = torch.from_numpy(G_np).to(device)
+
+    X = node_features.clone().detach().to(device).requires_grad_(True)
+
+    out = model(X, adj_norm.to(device))
+    s = out["y_pred"].sum()
+
+    grad_X = torch.autograd.grad(s, X, retain_graph=False)[0]  # (N, M)
+
+    # score_j = Σ_i G[i,j] · ∇X[i,j]
+    snp_scores = (G * grad_X).sum(dim=0)  # (M,)
+
+    if aggregate == "mean":
+        snp_scores = snp_scores / G.shape[0]
+    elif aggregate == "abs_sum":
         snp_scores = snp_scores.abs()
 
     return snp_scores.detach().cpu()
@@ -130,7 +182,8 @@ def compute_individual_scores(
     # 插补基因型
     G_np = impute_genotype(genotype)  # (N, M)
     G = torch.from_numpy(G_np).to(device)
-    E = torch.from_numpy(snp_embeddings.astype(np.float32)).to(device)  # (M, D_snp)
+    E = torch.from_numpy(snp_embeddings.astype(
+        np.float32)).to(device)  # (M, D_snp)
 
     # 前向传播（重用计算图）
     X = node_features.clone().detach().to(device).requires_grad_(True)

@@ -1,0 +1,38 @@
+{
+  "trait": "Biochem.HDL",
+  "mode": "no_vae",
+  "n_samples": 1509,
+  "n_snps": 9728,
+  "prediction": {
+    "mse": 0.1306732708687022,
+    "mae": 0.28171694010471915,
+    "r": 0.4555621134420562,
+    "r2": 0.20650178281984322
+  },
+  "attribution": {
+    "n_significant": 475,
+    "bonferroni_threshold": 0.06376065481826704,
+    "null_max_mean": 0.020655413842760026,
+    "null_max_std": 0.009576663775287963,
+    "top_snp_score": 0.13610514998435974,
+    "top_snp_idx": 3037,
+    "top_snp_name": "rs13478144"
+  },
+  "config": {
+    "vgae": {
+      "k_neighbors": 30,
+      "d_hidden1": 512,
+      "d_hidden2": 128,
+      "d_z": 16,
+      "dropout": 0.7,
+      "mlp_hidden": 64,
+      "lr": 0.001,
+      "alpha": 0.1,
+      "beta_kl": 0.01,
+      "max_epochs": 200,
+      "patience": 30,
+      "weight_decay": 0.0001,
+      "kl_warmup_epochs": 30
+    }
+  }
+}

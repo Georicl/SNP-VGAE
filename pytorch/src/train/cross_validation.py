@@ -3,13 +3,17 @@ K-fold 交叉验证模块
 ====================
 
 编排 VGAE 的 K-fold 交叉验证流程:
-  1. SNP-VAE 预训练（CV 外层，所有 fold 共享嵌入）
+  1. SNP-VAE 预训练（CV 外层，所有 fold 共享嵌入；可选）
   2. 图构建（GRM KNN + 特征聚合）
   3. K-fold 划分 → 每 fold 训练 VGAE → 评估
   4. 汇总 K-fold 结果（均值 ± 标准差）
 
+支持两种输入模式:
+  - VAE 模式:     传入 snp_embeddings → VGAEModel (d_snp=64)
+  - 原始基因型模式: snp_embeddings=None → VGAENoVAE (d_snp=M, 自动检测)
+
 数据流:
-  genotype + snp_embeddings + grm + labels
+  genotype + snp_embeddings(可选) + grm + labels
   → GraphBuilder → K-fold masks → VGAETrainer × K
   → 汇总 metrics
 
@@ -25,6 +29,7 @@ from typing import Any
 
 from graph.build_graph import GraphBuilder
 from model.vgae import VGAEModel
+from model.vgae_non_vae import VGAENoVAE
 from train.trainer import VGAETrainer
 
 
@@ -79,7 +84,7 @@ def generate_kfold_masks(
 
 def run_kfold_cv(
     genotype: np.ndarray,
-    snp_embeddings: np.ndarray,
+    snp_embeddings: np.ndarray | None,
     grm: np.ndarray,
     labels: np.ndarray,
     k_folds: int = 5,
@@ -89,6 +94,7 @@ def run_kfold_cv(
     # VGAE 模型参数
     d_snp: int = 64,
     d_hidden: int = 128,
+    d_hidden2: int = 128,
     d_z: int = 32,
     dropout: float = 0.5,
     mlp_hidden: int = 64,
@@ -110,14 +116,15 @@ def run_kfold_cv(
 
     参数:
         genotype:      (M, N) 基因型矩阵（SNP × 样本），-9 为缺失
-        snp_embeddings:(M, D_snp) SNP 嵌入矩阵
+        snp_embeddings:(M, D_snp) SNP 嵌入矩阵；None 表示原始基因型模式
         grm:           (N, N) GRM 矩阵
         labels:        (N,) 表型值
         k_folds:       折数
         seed:          随机种子
         k_neighbors:   KNN 近邻数
-        d_snp:         输入特征维度
+        d_snp:         输入特征维度（原始基因型模式下自动检测，此参数被忽略）
         d_hidden:      GCN 隐藏层维度
+        d_hidden2:     原始基因型模式下第二隐藏层维度（VGAENoVAE）
         d_z:           隐空间维度
         dropout:       GCN dropout
         mlp_hidden:    预测头隐藏层
@@ -143,12 +150,22 @@ def run_kfold_cv(
     N = len(labels)
     masks = generate_kfold_masks(N, k_folds, seed)
 
-    # 图构建（所有 fold 共享同一张图，因为 GRM 和 snp_embeddings 不变）
+    # 模式判定: 有 snp_embeddings → VAE 模式; 否则原始基因型模式
+    use_vae = snp_embeddings is not None
+
+    # 图构建（所有 fold 共享同一张图，因为 GRM 和特征不变）
     if progress:
-        print(f"\n===== M2: 图构建 (K={k_neighbors}) =====")
+        mode_name = "VAE 嵌入" if use_vae else "原始基因型"
+        print(f"\n===== M2: 图构建 (K={k_neighbors}, 模式={mode_name}) =====")
     builder = GraphBuilder()
     adj_norm, adj_raw = builder.knn_graph_builder(grm, k=k_neighbors)
     node_features = builder.build_node_features(genotype, snp_embeddings)
+
+    # 原始基因型模式下，d_snp 从节点特征维度自动检测
+    if not use_vae:
+        d_snp = node_features.shape[1]
+        if progress:
+            print(f"  输入维度自动检测: d_snp={d_snp}")
 
     # 确保 checkpoint 目录存在
     if checkpoint_dir is not None:
@@ -169,14 +186,24 @@ def run_kfold_cv(
                   f"测试: {test_mask.sum().item()}")
             print(f"{'='*50}")
 
-        # 创建模型
-        model = VGAEModel(
-            d_snp=d_snp,
-            d_hidden=d_hidden,
-            d_z=d_z,
-            dropout=dropout,
-            mlp_hidden=mlp_hidden,
-        )
+        # 创建模型（按模式选择模型类）
+        if use_vae:
+            model = VGAEModel(
+                d_snp=d_snp,
+                d_hidden=d_hidden,
+                d_z=d_z,
+                dropout=dropout,
+                mlp_hidden=mlp_hidden,
+            )
+        else:
+            model = VGAENoVAE(
+                d_snp=d_snp,
+                d_hidden1=d_hidden,
+                d_hidden2=d_hidden2,
+                d_z=d_z,
+                dropout=dropout,
+                mlp_hidden=mlp_hidden,
+            )
 
         # checkpoint 路径
         ckpt_path = None
@@ -225,7 +252,8 @@ def run_kfold_cv(
         print(f"K-fold 交叉验证结果 (K={k_folds})")
         print(f"{'='*50}")
         for key in all_keys:
-            print(f"  {key.upper():>4s}: {mean_metrics[key]:.4f} ± {std_metrics[key]:.4f}")
+            print(
+                f"  {key.upper():>4s}: {mean_metrics[key]:.4f} ± {std_metrics[key]:.4f}")
 
     return {
         "fold_metrics": fold_metrics_list,
