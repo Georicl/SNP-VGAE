@@ -180,6 +180,7 @@ SNP-VGAE/
 │   ├── model/            # M3/M4：VGAE 模型与归因
 │   │   ├── gcn.py            # GCNConv（纯稀疏矩阵运算）
 │   │   ├── vgae.py           # VGAEModel：编码器 + 边解码器 + 表型预测头
+│   │   ├── vgae_non_vae.py   # VGAENoVAE：原始基因型模式（跳过 VAE 预训练，3 层渐进压缩编码器）
 │   │   └── attribution.py    # SNP 级归因（编码器反投影）
 │   └── train/            # M5：训练与评估流水线
 │       ├── trainer.py            # VGAE 训练器
@@ -191,6 +192,7 @@ SNP-VGAE/
 │   ├── test_pretrain.py / test_build_graph.py / test_vgae_model.py
 │   ├── test_real_data.py         # SNP-VAE 真实数据端到端测试
 │   ├── predict_and_attribute.py  # 预测与 SNP 归因
+│   ├── predict_and_attribute_no_vae.py # 无 VAE 模式端到端推理 + 归因
 │   ├── snp_significance.py       # SNP 显著性判定（跨折一致性）
 │   ├── gwas_vs_vgae.py           # VGAE 归因 vs PLINK GWAS 对比
 │   ├── statistical_validation.py # 统计验证（置换检验汇总）
@@ -221,6 +223,13 @@ export PYTHONPATH=$PWD/pytorch/src
 
 # SNP-VAE 预训练（默认使用 test_data 中的 PLINK 数据）
 uv run python test/test_real_data.py --epochs 200 --d-snp 64 --batch-size 512
+```
+
+无 VAE 模式（原始基因型直接输入，跳过 SNP-VAE 预训练）：
+
+```bash
+export PYTHONPATH=$PWD/pytorch/src
+uv run python test/predict_and_attribute_no_vae.py
 ```
 
 单元测试：
@@ -254,9 +263,35 @@ uv run pytest test/test_pretrain.py test/test_build_graph.py test/test_vgae_mode
 
 统计显著性（Biochem.HDL）：5×5 重复交叉验证配对 t 检验 t = 8.36，p = 0.0011；置换检验下 BLUP 与 VGAE 的真实 R² 均显著高于零分布。
 
-## 已知局限与缺陷（如实披露）
+### 原始基因型模式（无 VAE，Biochem.HDL）
 
-本框架目前的结果存在以下缺陷，解读时应注意：
+除 VAE 嵌入模式外，框架支持 **原始基因型直接输入**（`VGAENoVAE`，编码器 9728 → 512 → 128 → 16 渐进压缩，跳过 SNP-VAE 预训练）。在 Biochem.HDL 上（N = 1,509，与 BLUP 相同的 5 折划分 seed=42）：
+
+**预测性能**（5 折跨折聚合）：
+
+| 指标 | GCTA-BLUP | VGAE-noVAE |
+| --- | --- | --- |
+| R² | 0.112 | **0.207（+85%）** |
+| r | **0.502** | 0.456 |
+| MSE | 0.146 | **0.131** |
+| MAE | 0.297 | **0.282** |
+
+no_vae 与 VAE 嵌入模式（R² = 0.218 ± 0.032）基本持平，且在 5 折中的 R²/MSE 全面优于 BLUP；BLUP 相关系数略高，逐样本胜率 52.4%，优势主要来自预测尺度校准与位点级建模。两模型预测值相关仅 0.51，等权融合后 R² 提升至 **0.301**，信息互补。
+
+**SNP 归因**（置换 null 分布 + Bonferroni 阈值 0.0638）：
+
+- 共 **475 个显著 SNP**（聚为 167 个 locus）；Top SNP 为 chr5 rs13478144（|score| = 0.136，约为置换零分布均值的 12 倍）；
+- **chr4 ~134–136 Mb 存在明显信号热点**（Top-24 中 8 个 SNP 落于该区间）；
+- 与 PLINK GWAS（加性线性模型）对比：GWAS 主效 QTL（chr1，p ≈ 1e-60）全部被识别；54.9% 的归因显著 SNP 落入 GWAS locus（±1 Mb）；
+- 筛出 **89 个线性盲区候选位点**（no_vae 显著、±500 kb 内 GWAS nominal p > 0.01，chr7/chr13 等成簇分布），可能来自上位性等非加性效应，尚待成对交互检验（y ~ A + B + A×B）确证。
+
+**已知统计局限**：显著性阈值取自仅 200 次置换的 null 最大值附近（公式取 (1−α/N_PERM) 分位），过于保守，检出数被低估；且置换次数不足导致校正 p 值饱和为 1.0。后续计划改用 95 分位 max-statistic 阈值 + BH-FDR，并将置换次数提升至 ≥10⁴。
+
+结果文件见 `test/result/Biochem.HDL_no_vae/`（predictions.tsv / snp_attribution.tsv / top_snps.tsv / model_summary.json）。
+
+## 已知局限
+
+目前的实验结果还有这些问题，解读时注意：
 
 1. **性状间表现不稳定**：四个性状中仅 2 个（HDL、ALP）有明确提升；End.Weight 上 BLUP 基线 R² 为负（-0.055），"提升率"指标失去意义；**Haem.MCV 上 VGAE 反而比 BLUP 低 22.6%**，说明模型对特定遗传结构的性状并不总是有效。
 2. **SNP 归因与 GWAS 仅部分重合**：VGAE 归因得分与 PLINK GWAS 显著性排序的 Spearman 相关仅 ρ = 0.233；Top-50 重要 SNP 中仅 1 个与 GWAS 重合，Top-100 中 10 个，Top-500 中 175 个——两种方法对"重要位点"的判断一致性有限，归因结果的生物学解释需谨慎。
