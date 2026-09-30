@@ -114,7 +114,8 @@ class VGAETrainer:
         }
 
     def _compute_loss(
-        self, out: dict[str, torch.Tensor], mask: torch.Tensor, current_beta: float
+        self, out: dict[str, torch.Tensor], mask: torch.Tensor, current_beta: float,
+        generator: torch.Generator | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         计算联合损失，表型损失仅在 mask 样本上计算。
@@ -146,6 +147,7 @@ class VGAETrainer:
             edge_index=out["edge_index"],
             adj_raw=self.adj_raw,
             neg_sample_ratio=self.neg_sample_ratio,
+            generator=generator,
         )
 
         # --- 3. KL 散度，全量 N 归一化 ---
@@ -182,14 +184,15 @@ class VGAETrainer:
         }
 
     @torch.no_grad()
-    def _validate(self, current_beta: float) -> dict[str, float]:
-        """验证模式，表型损失在 val_mask 上计算。"""
+    def _validate(self) -> dict[str, float]:
+        """固定目标 β 和负边样本进行验证；不与训练 warmup 的 β 一起变化。"""
         self.model.eval()
 
         out = self.model(self.node_features, self.adj_norm)
 
         total_loss, pheno_loss, edge_loss, kl_loss = self._compute_loss(
-            out, self.val_mask, current_beta
+            out, self.val_mask, self.beta,
+            generator=torch.Generator(device="cpu").manual_seed(0),
         )
 
         return {
@@ -242,7 +245,7 @@ class VGAETrainer:
             train_metrics = self._train_epoch(current_beta)
 
             # 验证
-            val_metrics = self._validate(current_beta)
+            val_metrics = self._validate()
 
             # 记录历史
             self.history["train_loss"].append(train_metrics["total"])

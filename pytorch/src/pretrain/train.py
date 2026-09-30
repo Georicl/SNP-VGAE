@@ -9,7 +9,7 @@ SNP-VAE 训练流程
 
 训练特性:
   - KL 退火: 前 warmup_epochs 轮 β 从 0 线性增大到目标值
-  - 早停机制: 基于验证集损失，退火期间不计入早停
+  - 早停机制: 基于固定目标 β 的训练重建/KL评分（没有独立验证集）
   - 学习率调度: ReduceLROnPlateau 自动降低学习率
 
 作者: Xiang Yang
@@ -24,6 +24,7 @@ from tqdm import tqdm
 from pretrain.preprocess import preprocess_genotype
 from pretrain.vae import SNPVAE, vae_loss
 from pretrain.extract_embeddings import extract_embeddings
+from train.reproducibility import seed_everything
 
 
 def train_snp_vae(
@@ -38,7 +39,10 @@ def train_snp_vae(
     progress: bool = True,
     kl_warmup_epochs: int = 150,
     hidden_dim: int = 1024,
+    seed: int = 42,
 ) -> tuple[SNPVAE, np.ndarray]:
+
+    seed_everything(seed)
 
     # 1. 数据预处理（含 SNP 行标准化）
     print(f"=====开始[SNP-VAE]=====")
@@ -116,8 +120,10 @@ def train_snp_vae(
         avg_recon: float = epoch_recon / n_batches
         avg_kl: float = epoch_kl / n_batches
         
-        # 学习率调度
-        scheduler.step(avg_loss)
+        # Compare the same objective across warmup epochs. This is a training
+        # criterion, not held-out validation or a generalization estimate.
+        selection_loss = avg_recon + beta * avg_kl
+        scheduler.step(selection_loss)
         
         # 更新进度条显示
         epoch_iter.set_postfix(
@@ -127,11 +133,11 @@ def train_snp_vae(
         # 早停检查（退火期间不计入早停，因为 β 增大导致 loss 上升是正常的）
         if epoch < kl_warmup_epochs:
             # 退火阶段：只更新最佳状态，不增加耐心计数
-            if avg_loss < best_loss:
-                best_loss = avg_loss
+            if selection_loss < best_loss:
+                best_loss = selection_loss
                 best_state = {k: v.clone() for k, v, in model.state_dict().items()}
-        elif avg_loss < best_loss:
-            best_loss = avg_loss
+        elif selection_loss < best_loss:
+            best_loss = selection_loss
             patience_count = 0
             best_state = {k: v.clone() for k, v, in model.state_dict().items()}
         else:
