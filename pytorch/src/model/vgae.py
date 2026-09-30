@@ -100,8 +100,10 @@ class VGAEModel(nn.Module):
             logvar: (N, D_z) 对数方差
 
         返回:
-            z: (N, D_z) 采样的隐变量
+            z: (N, D_z) 训练时采样；eval 时返回后验均值 mu
         """
+        if not self.training:
+            return mu
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + std * eps
@@ -231,6 +233,7 @@ def edge_reconstruction_loss(
     edge_index: Tensor,
     adj_raw: Tensor,
     neg_sample_ratio: float,
+    generator: torch.Generator | None = None,
 ) -> Tensor:
     """
     边重建 BCE 损失（带负采样）。
@@ -244,6 +247,7 @@ def edge_reconstruction_loss(
         edge_index:       (2, E) 正边索引
         adj_raw:          (N, N) 稀疏原始邻接
         neg_sample_ratio: 负采样比例
+        generator: 可选独立随机源；验证使用固定CPU generator避免改变训练随机状态
 
     返回:
         edge_loss: 标量 BCE 损失
@@ -261,8 +265,10 @@ def edge_reconstruction_loss(
     n_neg = int(neg_sample_ratio * n_pos)
 
     # 随机生成候选负边 (row, col) 对
-    neg_row = torch.randint(0, N, (n_neg,), device=z.device)
-    neg_col = torch.randint(0, N, (n_neg,), device=z.device)
+    # A CPU generator also works when inference runs on MPS/CUDA.
+    sample_device = generator.device if generator is not None else z.device
+    neg_row = torch.randint(0, N, (n_neg,), device=sample_device, generator=generator).to(z.device)
+    neg_col = torch.randint(0, N, (n_neg,), device=sample_device, generator=generator).to(z.device)
 
     # 过滤自环
     is_self_loop = neg_row == neg_col

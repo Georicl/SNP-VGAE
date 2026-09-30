@@ -20,6 +20,7 @@
 
 #include <Eigen/Dense>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -29,8 +30,8 @@ struct SNPinfo {
   std::string snp_chr;   // 染色体编号
   std::string allele1;   // 等位基因1
   std::string allele2;   // 等位基因2
-  double snp_position;   // SNP位置
-  long cM;               // 遗传距离(cM)
+  std::int64_t snp_position;  // SNP物理位置(bp, 整数)
+  double cM;                 // 遗传距离(cM, 可含小数)
 };
 
 // PLINK数据结构体,整合三个文件的信息
@@ -52,6 +53,10 @@ struct PlinkData {
  *   famFile - 家系信息文件路径
  * 返回:
  *   PlinkData结构体,包含所有SNP信息和基因型矩阵
+ * Throws std::runtime_error for malformed input. FAM and BIM require exactly
+ * six fields per nonempty record; blank rows and empty files are rejected.
+ * BIM cM must be finite and bp must be an integer. BED must be SNP-major with
+ * exactly the payload size implied by FAM and BIM.
  */
 PlinkData PlinkReader(const std::string& bedFile, const std::string& bimFile,
                       const std::string& famFile);

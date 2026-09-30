@@ -31,6 +31,7 @@ from graph.build_graph import GraphBuilder
 from model.vgae import VGAEModel
 from model.vgae_non_vae import VGAENoVAE
 from train.trainer import VGAETrainer
+from train.reproducibility import seed_everything
 
 
 def generate_kfold_masks(
@@ -51,6 +52,8 @@ def generate_kfold_masks(
     返回:
         [(train_mask, val_mask, test_mask), ...] × K
     """
+    if k_folds < 3 or n_samples < k_folds:
+        raise ValueError("Require 3 <= k_folds <= n_samples for nonempty train/val/test splits")
     rng = np.random.RandomState(seed)
     indices = rng.permutation(n_samples)
     fold_size = n_samples // k_folds
@@ -185,6 +188,9 @@ def run_kfold_cv(
                   f"验证: {val_mask.sum().item()}  "
                   f"测试: {test_mask.sum().item()}")
             print(f"{'='*50}")
+
+        # Seed model initialization, dropout, latent draws and edge sampling.
+        seed_everything(seed + fold_idx)
 
         # 创建模型（按模式选择模型类）
         if use_vae:

@@ -33,6 +33,7 @@ from data.grm import grm_reader, grm_id_reader
 from pretrain.train import train_snp_vae
 from train.cross_validation import run_kfold_cv, generate_kfold_masks
 from train.metrics import evaluate_all
+from train.blup import blup_predict, select_blup_lambda
 
 # ============================================================================
 # 配置
@@ -114,40 +115,17 @@ def load_phenotype(pheno_file: str, grm_ids: list) -> np.ndarray:
     return labels, matched
 
 
-def blup_predict(grm, labels, train_mask, test_mask, lam):
-    """BLUP 预测 (Ridge on GRM)。"""
-    train_idx = np.where(train_mask)[0]
-    test_idx = np.where(test_mask)[0]
-    y_train = labels[train_idx]
-    K_train = grm[np.ix_(train_idx, train_idx)]
-    K_test = grm[np.ix_(test_idx, train_idx)]
-    mu = y_train.mean()
-    y_c = y_train - mu
-    A = K_train + lam * np.eye(len(train_idx))
-    alpha = np.linalg.solve(A, y_c)
-    return K_test @ alpha + mu
-
-
 def blup_cv(grm, labels, masks):
-    """BLUP 5-fold CV，内层选 λ。"""
-    fold_metrics = []
-    best_lambdas = []
+    """Tune only on held-out validation, then refit train + validation."""
+    fold_metrics, best_lambdas = [], []
     for train_mask, val_mask, test_mask in masks:
-        combined = np.zeros(len(labels), dtype=bool)
-        combined[np.where(train_mask)[0]] = True
-        combined[np.where(val_mask)[0]] = True
-
-        best_mse, best_lam = float("inf"), 1.0
-        for lam in LAMBDA_GRID:
-            pred = blup_predict(grm, labels, combined, val_mask, lam)
-            mse = np.mean((pred - labels[val_mask]) ** 2)
-            if mse < best_mse:
-                best_mse, best_lam = mse, lam
-        best_lambdas.append(best_lam)
-
+        best_lam = select_blup_lambda(grm, labels, train_mask, val_mask, LAMBDA_GRID)
+        combined = np.asarray(train_mask, dtype=bool) | np.asarray(val_mask, dtype=bool)
+        if np.any(combined & np.asarray(test_mask, dtype=bool)):
+            raise ValueError("BLUP test samples overlap the refit set")
         pred_test = blup_predict(grm, labels, combined, test_mask, best_lam)
         fold_metrics.append(evaluate_all(pred_test, labels[test_mask]))
-
+        best_lambdas.append(best_lam)
     return fold_metrics, best_lambdas
 
 

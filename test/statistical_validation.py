@@ -1,16 +1,16 @@
 """
-统计显著性验证模块
+探索性统计诊断模块
 ==================
 
-对 VGAE 基因组预测进行严格的统计检验:
+对 VGAE 基因组预测进行探索性诊断；重复划分结果不代表独立队列验证:
 
-  1. 重复 K-fold CV (10× 5-fold, 不同随机种子)
-     → R² 均值 ± 95% CI
-     → VGAE vs BLUP 配对 t 检验
+  1. 重复 K-fold CV (5× 5-fold, 不同随机种子)
+     → R² 均值与描述性划分波动（非总体置信区间）
+     → VGAE vs BLUP 未校准的配对 t 描述量，不作显著性判定
 
   2. Permutation Test (打乱表型标签)
      → BLUP: 1000 次置换 (快速)
-     → VGAE: 50 次置换 (加速模式)
+     → VGAE: 20 次置换（与观测值相同训练配置）
      → 单侧 p-value
 
 运行方式:
@@ -36,6 +36,7 @@ from data.grm import grm_reader, grm_id_reader
 from pretrain.train import train_snp_vae
 from train.cross_validation import run_kfold_cv, generate_kfold_masks
 from train.metrics import evaluate_all
+from train.blup import blup_predict, select_blup_lambda
 
 # ============================================================================
 # 配置
@@ -67,13 +68,6 @@ VGAE_CONFIG = dict(
     max_epochs=200, patience=30, weight_decay=1e-5, kl_warmup_epochs=30,
 )
 
-# VGAE 加速配置 (用于 permutation test)
-VGAE_FAST_CONFIG = dict(
-    k_neighbors=30, d_snp=64, d_hidden=128, d_z=16,
-    dropout=0.5, mlp_hidden=64, lr=1e-3, alpha=0.1, beta_kl=0.01,
-    max_epochs=100, patience=15, weight_decay=1e-5, kl_warmup_epochs=15,
-)
-
 LAMBDA_GRID = [0.05, 0.1, 0.2, 0.35, 0.6, 1.0, 1.5, 2.5, 4.0, 6.0, 10.0]
 
 
@@ -99,36 +93,18 @@ def load_phenotype(pheno_file, grm_ids):
     return labels
 
 
-def blup_predict(grm, labels, train_mask, test_mask, lam):
-    train_idx = np.where(train_mask)[0]
-    test_idx = np.where(test_mask)[0]
-    y_train = labels[train_idx]
-    K_train = grm[np.ix_(train_idx, train_idx)]
-    K_test = grm[np.ix_(test_idx, train_idx)]
-    mu = y_train.mean()
-    A = K_train + lam * np.eye(len(train_idx))
-    alpha = np.linalg.solve(A, y_train - mu)
-    return K_test @ alpha + mu
-
-
 def blup_cv(grm, labels, seed):
-    """BLUP 5-fold CV，返回平均 R²。"""
+    """Tune only on held-out validation, then refit train + validation."""
     masks = generate_kfold_masks(len(labels), K_FOLDS, seed)
-    r2_list = []
+    fold_metrics = []
     for train_mask, val_mask, test_mask in masks:
-        combined = np.zeros(len(labels), dtype=bool)
-        combined[np.where(train_mask)[0]] = True
-        combined[np.where(val_mask)[0]] = True
-        best_mse, best_lam = float("inf"), 1.0
-        for lam in LAMBDA_GRID:
-            pred = blup_predict(grm, labels, combined, val_mask, lam)
-            mse = np.mean((pred - labels[val_mask]) ** 2)
-            if mse < best_mse:
-                best_mse, best_lam = mse, lam
+        best_lam = select_blup_lambda(grm, labels, train_mask, val_mask, LAMBDA_GRID)
+        combined = np.asarray(train_mask, dtype=bool) | np.asarray(val_mask, dtype=bool)
+        if np.any(combined & np.asarray(test_mask, dtype=bool)):
+            raise ValueError("BLUP test samples overlap the refit set")
         pred_test = blup_predict(grm, labels, combined, test_mask, best_lam)
-        m = evaluate_all(pred_test, labels[test_mask])
-        r2_list.append(m["r2"])
-    return float(np.mean(r2_list))
+        fold_metrics.append(evaluate_all(pred_test, labels[test_mask]))
+    return float(np.mean([m["r2"] for m in fold_metrics]))
 
 
 def vgae_cv(genotype, snp_emb, grm, labels, seed, config, device, progress=False):
@@ -146,7 +122,7 @@ def vgae_cv(genotype, snp_emb, grm, labels, seed, config, device, progress=False
 def main():
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     print("=" * 70)
-    print("P0: 统计显著性验证 — Biochem.HDL")
+    print("探索性统计诊断 — Biochem.HDL")
     print("=" * 70)
     print(f"设备: {device}")
     print(f"重复 CV: {N_REPEATS}× {K_FOLDS}-fold")
@@ -209,7 +185,7 @@ def main():
     # 配对 t 检验
     t_stat, p_paired = stats.ttest_rel(vgae_arr, blup_arr)
 
-    # 95% CI
+    # Descriptive split variability only; repeated splits are correlated.
     def ci95(arr):
         m, se = arr.mean(), arr.std(ddof=1) / np.sqrt(len(arr))
         return m - 1.96 * se, m + 1.96 * se
@@ -221,11 +197,11 @@ def main():
     print("重复 CV 结果")
     print(f"{'='*70}")
     print(f"  BLUP R²: {blup_arr.mean():.4f} ± {blup_arr.std(ddof=1):.4f}  "
-          f"95%CI [{blup_ci[0]:.4f}, {blup_ci[1]:.4f}]")
+          f"描述性 ±1.96SE 范围 [{blup_ci[0]:.4f}, {blup_ci[1]:.4f}]（非总体置信区间）")
     print(f"  VGAE R²: {vgae_arr.mean():.4f} ± {vgae_arr.std(ddof=1):.4f}  "
-          f"95%CI [{vgae_ci[0]:.4f}, {vgae_ci[1]:.4f}]")
-    print(f"  配对 t 检验: t={t_stat:.3f}, p={p_paired:.6f}")
-    print(f"  {'VGAE 显著优于 BLUP' if p_paired < 0.05 else '差异不显著'} (α=0.05)")
+          f"描述性 ±1.96SE 范围 [{vgae_ci[0]:.4f}, {vgae_ci[1]:.4f}]（非总体置信区间）")
+    print(f"  未校准的配对 t 描述量: t={t_stat:.3f}, p={p_paired:.6f}")
+    print("  重复划分并非独立队列；不据此进行显著性判定。")
 
     # ==================================================================
     # Part 2: Permutation Test
@@ -256,14 +232,14 @@ def main():
           f"null={blup_perm.mean():.4f}±{blup_perm.std():.4f}, "
           f"p={blup_pval:.4f}")
 
-    # VGAE permutation (加速模式)
-    print(f"\n  VGAE permutation ({N_PERM_VGAE} 次, 加速模式)...")
+    # VGAE permutation (与观测值使用相同配置)
+    print(f"\n  VGAE permutation ({N_PERM_VGAE} 次, 相同训练配置)...")
     t0 = time.time()
     vgae_perm = []
     for i in range(N_PERM_VGAE):
         perm_labels = rng.permutation(lab_sub)
         r2 = vgae_cv(geno_sub, snp_emb, grm_sub, perm_labels, seed=42,
-                     config=VGAE_FAST_CONFIG, device=device, progress=False)
+                     config=VGAE_CONFIG, device=device, progress=False)
         vgae_perm.append(r2)
         elapsed = time.time() - t0
         eta = elapsed / (i + 1) * (N_PERM_VGAE - i - 1)
@@ -279,19 +255,27 @@ def main():
     # 汇总
     # ==================================================================
     print(f"\n{'='*70}")
-    print("P0 统计验证汇总 — Biochem.HDL")
+    print("探索性统计诊断汇总 — Biochem.HDL")
     print(f"{'='*70}")
     print(f"\n  1. 重复 {N_REPEATS}× {K_FOLDS}-fold CV:")
     print(f"     BLUP R² = {blup_arr.mean():.4f} ± {blup_arr.std(ddof=1):.4f}")
     print(f"     VGAE R² = {vgae_arr.mean():.4f} ± {vgae_arr.std(ddof=1):.4f}")
-    print(f"     配对 t 检验 p = {p_paired:.6f} "
-          f"{'***' if p_paired < 0.001 else '**' if p_paired < 0.01 else '*' if p_paired < 0.05 else 'ns'}")
+    print(f"     未校准的配对 t 描述量 p = {p_paired:.6f}（不作显著性判定）")
     print(f"\n  2. Permutation Test:")
     print(f"     BLUP p = {blup_pval:.4f} ({N_PERM_BLUP} 次置换)")
     print(f"     VGAE p = {vgae_pval:.4f} ({N_PERM_VGAE} 次置换)")
 
     # 保存结果
     result = {
+        "evaluation_notes": {
+            "cv_design": "transductive; repeated splits are not independent cohorts",
+            "repeat_intervals": "descriptive split variability, not population confidence intervals",
+            "legacy_ci95_and_paired_p_fields": "uncalibrated descriptive diagnostics; retained for file-format compatibility",
+            "inference": "posterior mean (eval mode)",
+            "permutation_training_config": dict(VGAE_CONFIG),
+            "observed_training_config": dict(VGAE_CONFIG),
+            "permutation_seed": 123,
+        },
         "trait": "Biochem.HDL",
         "n_samples": int(n),
         "repeated_cv": {
